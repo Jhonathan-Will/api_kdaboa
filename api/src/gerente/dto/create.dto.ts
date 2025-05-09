@@ -6,15 +6,21 @@ export class CriarGereneteDTO {
         description: "Nome do gerente",
         example: "Teste da Silva",
     })
-    @IsNotEmpty()
-    @IsString()
+    @IsNotEmpty({
+        message: "Nome não pode ser vazio"
+    })
+    @IsString({
+        message: "Nome deve ser uma string"
+    })
     nome: string;
 
     @ApiProperty({
         description: "Email do gerente",
         example: "teste@gmai.com"
     })
-    @IsNotEmpty()
+    @IsNotEmpty({
+        message: "Email não pode ser vazio"
+    })
     @IsEmail()
     email: string;
 
@@ -22,7 +28,11 @@ export class CriarGereneteDTO {
         description: "Senha do gerente",
         example: "Teste@2025"
     })
-    @IsNotEmpty()
-    @IsString()
+    @IsNotEmpty({
+        message: "Senha não pode ser vazio"
+    })
+    @IsString({
+        message: "Senha deve ser uma string"
+    })
     senha: string;
 }

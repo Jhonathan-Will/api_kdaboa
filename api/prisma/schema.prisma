@@ -94,7 +94,7 @@ model Evento_Categoria {
 model Usuario {
   id_usuario         Int              @id @default(autoincrement())
   nome_usuario       String           @db.VarChar(200)
-  email              String           @db.VarChar(255)
+  email              String           @db.VarChar(255) @unique
   senha              String           @db.VarChar(255)
   tipo               Usuario_tipo
   status             Int?             @db.TinyInt
@@ -106,5 +106,5 @@ model Usuario {
 
 enum Usuario_tipo {
   Gerente
-  Funcion__rio @map("FuncionÃ¡rio")
+  Funcionario 
 }

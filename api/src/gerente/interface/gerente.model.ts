@@ -16,4 +16,13 @@ export class GerenteModel {
             },
         });
     }
+
+    async verificaExisteGerente(email: string) {
+        return await this.prisma.usuario.findFirst({
+            where: {
+                email: email,
+                tipo: "Gerente",
+            },
+        })
+    }
 }
