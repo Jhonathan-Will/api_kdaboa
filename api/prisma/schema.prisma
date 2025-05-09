@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Categoria {
+  id_categoria              Int                         @id @default(autoincrement())
+  nome_categoria            String                      @db.VarChar(100)
+  icone                     String                      @db.VarChar(255)
+  Estabelecimento_Categoria Estabelecimento_Categoria[]
+  Evento_Categoria          Evento_Categoria[]
+}
+
+model Contato {
+  id_contato      Int              @id @default(autoincrement())
+  tel_cel_1       String           @db.VarChar(11)
+  tel_cel_2       String?          @db.VarChar(11)
+  email           String           @db.VarChar(255)
+  Estabelecimento Estabelecimento?
+}
+
+model Endereco {
+  id_endereco     Int              @id @default(autoincrement())
+  rua             String           @db.VarChar(200)
+  numero          String           @db.VarChar(10)
+  complemento     String?          @db.VarChar(100)
+  bairro          String           @db.VarChar(100)
+  cidade          String           @db.VarChar(100)
+  estado          String           @db.Char(2)
+  cep             String           @db.VarChar(8)
+  Estabelecimento Estabelecimento?
+  Evento          Evento[]
+}
+
+model Estabelecimento {
+  id_estabelecimento        Int                         @id @default(autoincrement())
+  nome                      String                      @db.VarChar(200)
+  cnpj                      String                      @db.VarChar(14)
+  descricao                 String                      @db.VarChar(500)
+  status                    Int?                        @db.TinyInt
+  imagem                    String?                     @db.VarChar(200)
+  id_endereco               Int?                        @unique(map: "id_endereco")
+  id_contato                Int?                        @unique(map: "id_contato")
+  Contato                   Contato?                    @relation(fields: [id_contato], references: [id_contato], onDelete: NoAction, map: "fk_estabelecimento_contato")
+  Endereco                  Endereco?                   @relation(fields: [id_endereco], references: [id_endereco], onDelete: NoAction, map: "fk_estabelecimento_endereco")
+  Estabelecimento_Categoria Estabelecimento_Categoria[]
+  Evento                    Evento[]
+  Usuario                   Usuario[]
+}
+
+model Estabelecimento_Categoria {
+  id_estabelecimento Int
+  id_categoria       Int
+  Estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "Estabelecimento_Categoria_ibfk_1")
+  Categoria          Categoria       @relation(fields: [id_categoria], references: [id_categoria], onDelete: Cascade, map: "Estabelecimento_Categoria_ibfk_2")
+
+  @@id([id_estabelecimento, id_categoria])
+  @@index([id_categoria], map: "id_categoria")
+}
+
+model Evento {
+  id_evento          Int                @id @default(autoincrement())
+  nome_evento        String             @db.VarChar(200)
+  descricao          String?            @db.VarChar(500)
+  data_criacao       DateTime?          @db.Date
+  data_inicio        DateTime?          @db.Date
+  data_fim           DateTime?          @db.Date
+  estatus            Int?               @db.TinyInt
+  imagem             String?            @db.VarChar(200)
+  id_estabelecimento Int?
+  id_endereco        Int?
+  Estabelecimento    Estabelecimento?   @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "Evento_ibfk_1")
+  Endereco           Endereco?          @relation(fields: [id_endereco], references: [id_endereco], onDelete: Cascade, map: "Evento_ibfk_2")
+  Evento_Categoria   Evento_Categoria[]
+
+  @@index([id_endereco], map: "id_endereco")
+  @@index([id_estabelecimento], map: "id_estabelecimento")
+}
+
+model Evento_Categoria {
+  id_evento    Int
+  id_categoria Int
+  Evento       Evento    @relation(fields: [id_evento], references: [id_evento], onDelete: Cascade, map: "Evento_Categoria_ibfk_1")
+  Categoria    Categoria @relation(fields: [id_categoria], references: [id_categoria], onDelete: Cascade, map: "Evento_Categoria_ibfk_2")
+
+  @@id([id_evento, id_categoria])
+  @@index([id_categoria], map: "id_categoria")
+}
+
+model Usuario {
+  id_usuario         Int              @id @default(autoincrement())
+  nome_usuario       String           @db.VarChar(200)
+  email              String           @db.VarChar(255)
+  senha              String           @db.VarChar(255)
+  tipo               Usuario_tipo
+  status             Int?             @db.TinyInt
+  id_estabelecimento Int?
+  Estabelecimento    Estabelecimento? @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onUpdate: NoAction, map: "Usuario_ibfk_1")
+
+  @@index([id_estabelecimento], map: "id_estabelecimento")
+}
+
+enum Usuario_tipo {
+  Gerente
+  Funcion__rio @map("FuncionÃ¡rio")
+}
