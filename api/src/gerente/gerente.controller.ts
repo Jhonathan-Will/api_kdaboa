@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
-import { CriarGereneteDTO } from './dto/create.dto';
+import { CriarGereneteDTO } from '../auth/dto/create.dto';
 import { GerenteService } from './gerente.service';
 
 @Controller("gerente")
@@ -11,8 +11,5 @@ export class GerenteController {
         return "Gerente";
     }
 
-    @Post()
-    async createGerente(@Body() gerente: CriarGereneteDTO) {
-        return await this.gerenteService.criarGerente(gerente);
-    }
+
 }

@@ -8,5 +8,6 @@ import { GerenteModel } from './interface/gerente.model';
   imports: [],
   controllers: [GerenteController],
   providers: [PrismaService, GerenteService, GerenteModel],
+  exports: [GerenteModel]
 })
 export class GerenteModule {}
