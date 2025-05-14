@@ -21,6 +21,7 @@ No caso de quererem ver como está sendo estruturado nosso front-end é só [cli
 - **JWT**
 - **Nodemailer**
 - **Ejs**
+- **Cors**
 
 ---
 
