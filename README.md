@@ -27,7 +27,7 @@ No caso de quererem ver como está sendo estruturado nosso front-end é só [cli
 ## Organização do projeto
 O projeto é separado por cada pacote para facilitar manutenção e escalabilidade de todo o projeto
 
-para melhor entendimento segue a descrição de todas as pastas
+para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md)
 
 ---
 
