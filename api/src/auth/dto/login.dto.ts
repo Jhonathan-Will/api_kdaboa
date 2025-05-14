@@ -1,21 +1,10 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CriarGereneteDTO {
-    @ApiProperty({
-        description: "Nome do gerente",
-        example: "Teste da Silva",
-    })
-    @IsNotEmpty({
-        message: "Nome não pode ser vazio"
-    })
-    @IsString({
-        message: "Nome deve ser uma string"
-    })
-    nome: string;
+export class  LoginDTO {
 
     @ApiProperty({
-        description: "Email do gerente",
+        description: 'Email do usuário',
         example: "teste@gmail.com"
     })
     @IsNotEmpty({
@@ -25,7 +14,7 @@ export class CriarGereneteDTO {
     email: string;
 
     @ApiProperty({
-        description: "Senha do gerente",
+        description: 'Senha do usuário',
         example: "Teste@2025"
     })
     @IsNotEmpty({
