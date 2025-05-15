@@ -22,6 +22,7 @@ No caso de quererem ver como está sendo estruturado nosso front-end é só [cli
 - **Nodemailer**
 - **Ejs**
 - **Cors**
+- **Bcrypt**
 
 ---
 
@@ -89,5 +90,14 @@ para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md
      ```.env
      EMAIL_USER="<seu_email>"
      EMAIL_PASS="<sua_senha>"
+     ALLOWED_DOMAINS="gmail.com,hotmail.com,outlook.com,yahoo.com,icloud.com"
      ```
+6. Configure o cors para integrar com o front-end - **(Opcional)**
+   - para que a aplicação aceite requisição de outras paginas e locais configure o cors para não ter problemas, para isso vamos adicionar mais 3 variaveis no .env
+     ```.env
+     CORS_ORIGIN="http://<URL_que_fara_requisição>"
+     CORS_METHODS="GET,POST,DELETE"
+     CORS_ALLOWED_HEADERS="Authorization,Content-Type"
+     ``` 
+
    - Para alguns seviços de email devemos adicionar algumas configurações a mais, no nosso caso estamos usando o gmail, mas para outros serviços será necessário adicioar outras configuraçẽos, segue o link para [configurar seu nodemailer](https://nodemailer.com/usage) e [onde você deve configurar seu nodemailer](https://github.com/Jhonathan-Will/api_kdaboa/blob/main/api/src/email/email.service.ts)
