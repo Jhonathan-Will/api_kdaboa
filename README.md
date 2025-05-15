@@ -68,7 +68,7 @@ para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md
   
    - após tudo isso rode os seguintes comando no terminal para que o prisma suba altomaticante nosso banco de dados
      ```bash
-
+     # 1. Instala as dependências (caso ainda não tenha rodado)
      npm install
       
      # 2. Cria as tabelas no banco de dados com base nos modelos
