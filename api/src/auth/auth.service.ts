@@ -84,9 +84,10 @@ export class AuthService {
     }
 
     async verifyEmail(token: string) {
-        try{
+        
             const decodificado = this.jwtService.verify(token);
             const usuario = await this.gerenteModel.verificaExistencia(decodificado.email);
+
             const statusVerificado = Number(process.env.STATUS_VERIFICADO);
             const statusCriado = Number(process.env.STATUS_CRIADO);
             if (isNaN(statusVerificado) || isNaN(statusCriado)) {
@@ -103,20 +104,13 @@ export class AuthService {
                         error: "Email já verificado",
                     }, 400);
                 }
+                
                 const novoUsuario = await this.gerenteModel.atualizaGerente(usuario.id_usuario, statusVerificado);
-                const payload = { email: novoUsuario.email, sub: novoUsuario.id_usuario, status: novoUsuario.status };
+                const payload = { email: novoUsuario.email, sub: novoUsuario.id_usuario, status: novoUsuario.status, tipo: novoUsuario.tipo};
                 const token = this.jwtService.sign( payload, { expiresIn: '1h' });
                 return { message: 'Email verificado com sucesso', token};
             }
-        }catch(e){
-
-            console.log(e)
-            
-            throw new HttpException({
-                status: 400,
-                error: "Token inválido",
-            }, 400);
-        }
+        
     }
     
     async login(user: LoginDTO) {
@@ -129,7 +123,7 @@ export class AuthService {
                 return {
                     access_token: this.jwtService.sign(payload),
                 };
-            }  {
+            }else{
                 throw new HttpException({
                     status: 400,
                     error: "credenciais invalidas",

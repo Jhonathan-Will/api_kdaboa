@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 import * as ejs from "ejs";
-import { dirname, join } from "path";
+import { join } from "path";
 
 @Injectable()
 export class EmailService {
@@ -23,11 +23,11 @@ export class EmailService {
         try {
 
             let path = join(__dirname, "templates", "verification.ejs");
-            const templatePath = path.replace("/dist/", "/src/");
+            const templatePath = path.replace("dist", "src");
             const html = await ejs.renderFile(templatePath, { token });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("/dist/", "/src/");
+            const logoPath = path.replace("dist", "src");
 
 
             const info = await this.transporter.sendMail({
