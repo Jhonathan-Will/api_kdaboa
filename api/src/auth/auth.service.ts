@@ -14,52 +14,73 @@ export class AuthService {
                 private readonly email: EmailService) {}
 
     async singIn(gerente: CriarGereneteDTO) {
-        if (!process.env.ALLOWED_DOMAINS) {
-            throw new HttpException({
-                status: 500,
-                error: "ALLOWED_DOMAINS não está definido nas variáveis de ambiente",
-            }, 500);
-        }
-        const dominiosPermitidos = process.env.ALLOWED_DOMAINS.split(',');
-        console.log(dominiosPermitidos)
+            if (!process.env.ALLOWED_DOMAINS) {
+                throw new HttpException(
+                    {
+                        status: 500,
+                        error: 'ALLOWED_DOMAINS não está definido nas variáveis de ambiente',
+                    },
+                    500,
+                );
+            }
 
-        
-        const dominioEmail = gerente.email.split('@')[1]?.toLowerCase();
-        if (!dominiosPermitidos.includes(dominioEmail)) {
-            throw new HttpException({
-                status: 400,
-                error: "Domínio de e-mail não permitido",
-            }, 400);
-        }
+            const dominiosPermitidos = process.env.ALLOWED_DOMAINS.split(',');
+            const dominioEmail = gerente.email.split('@')[1]?.toLowerCase();
 
-        const verify = await this.gerenteModel.verificaExistencia(gerente.email);
-        if(verify) {
-            throw new HttpException({
-                status: 400,
-                error: "Gerente já existe",
-            }, 400);
-        }
+            if (!dominiosPermitidos.includes(dominioEmail)) {
+                throw new HttpException(
+                    {
+                        status: 400,
+                        error: 'Domínio de e-mail não permitido',
+                    },
+                    400,
+                );
+            }
 
-        const statusCriado = Number(process.env.STATUS_CRIADO);
-        if (isNaN(statusCriado)) {
-            throw new HttpException({
-                status: 500,
-                error: "STATUS_CRIADO não está definido ou não é um número válido",
-            }, 500);
-        }
+            const verify = await this.gerenteModel.verificaExistencia(gerente.email);
+            if (verify) {
+                throw new HttpException(
+                    {
+                        status: 400,
+                        error: 'Gerente já existe',
+                    },
+                    400,
+                );
+            }
 
-        const sal = await bcrypt.genSalt(10);
-        const senhaCriptografada = await bcrypt.hash(gerente.senha, sal);
-        gerente.senha = senhaCriptografada;
+            const statusCriado = Number(process.env.STATUS_CRIADO);
+            if (isNaN(statusCriado)) {
+                throw new HttpException(
+                    {
+                        status: 500,
+                        error: 'STATUS_CRIADO não está definido ou não é um número válido',
+                    },
+                    500,
+                );
+            }
 
-        const user = await this.gerenteModel.criarGerente(gerente, statusCriado);
-        const payload = {email: user.email, sub: user.id_usuario, status: user.status};
-        const token = await this.jwtService.sign(payload, { expiresIn: '1h' });
+            const payload = { email: gerente.email, status: statusCriado };
+            const token = await this.jwtService.sign(payload, { expiresIn: '1h' });
 
-        await this.email.sendVerificationEmail(user.email, token);
+            try {
+                await this.email.sendVerificationEmail(gerente.email, token);
+            } catch (err) {
+                console.log('erro ao enviar email', err);
+                throw new HttpException(
+                    {
+                        status: 500,
+                        error: 'Erro ao enviar email',
+                    },
+                    500,
+                );
+            }
 
-        return { message: 'Verifique seu e-mail' };
+            const sal = await bcrypt.genSalt(10);
+            gerente.senha = await bcrypt.hash(gerente.senha, sal);
 
+            await this.gerenteModel.criarGerente(gerente, statusCriado);
+
+            return { message: 'Verifique seu e-mail' };
     }
 
     async verifyEmail(token: string) {
@@ -99,11 +120,12 @@ export class AuthService {
     }
     
     async login(user: LoginDTO) {
-        const request = await this.gerenteModel.verificaExistencia(user.email);
+        const response = await this.gerenteModel.verificaExistencia(user.email);
 
-        if(request){
-            if (request.senha === user.senha) {
-                const payload = { email: request.email, sub: request.id_usuario };
+        if(response){
+
+            if (bcrypt.compareSync(user.senha, response.senha)) {
+                const payload = { email: response.email, sub: response.id_usuario, status: response.status, tipo: response.tipo};
                 return {
                     access_token: this.jwtService.sign(payload),
                 };
