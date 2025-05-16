@@ -4,10 +4,20 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { GerenteModule } from 'src/gerente/gerente.module';
 import { EmailModule } from 'src/email/email.module';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
-    imports: [GerenteModule, JwtModule.register({secret: process.env.SECRET, signOptions: {expiresIn: '60s'}}), EmailModule],
+    imports: [
+        PassportModule,
+        GerenteModule,
+        JwtModule.register({
+            secret: process.env.SECRET,
+        }),
+        EmailModule
+    ],
     controllers: [AuthController],
-    providers: [AuthService],
+    providers: [AuthService, JwtStrategy],
+    exports: [JwtStrategy]
 })
 export class AuthModule {}
