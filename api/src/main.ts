@@ -8,11 +8,16 @@ import { AllExceptionsFilter } from './common/filter/http-execption.filter';
 
 import * as dotenv from 'dotenv';
 
+import * as express from 'express';
+import { join } from 'path';
+
 dotenv.config();
 
 async function bootstrap() {
   
   const app = await NestFactory.create(AppModule,  {cors: true});
+
+  app.use('/favicon.ico', express.static(join(__dirname, '..', 'favicon.ico')));
 
   const allowedHeaders = process.env.CORS_ALLOWED_HEADERS || [];
   app.enableCors({
@@ -40,6 +45,11 @@ async function bootstrap() {
     .setTitle("API KdABoa")
     .setDescription("API para o projeto KdABoa")
     .setVersion("1.0")
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    }, 'Authorization')
     .build();
 
   const documentFactory = SwaggerModule.createDocument(app, config);

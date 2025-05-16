@@ -33,7 +33,12 @@ export class GerenteModel {
                 id_usuario: id,
             },
             data: mudanca
-        })
+        }).then((response) => {
+            console.log("Gerente atualizado com sucesso", response);
+        }).catch((error) => {
+            console.error("Erro ao atualizar gerente", error);
+            throw new Error("Erro ao atualizar gerente");
+        });
 
         const gerente = await this.prisma.usuario.findFirst({
             where: {

@@ -50,4 +50,33 @@ export class EmailService {
             throw error;
         }
     }
+
+    async sendRecoveryPasswordEmail(email: string, token: string) {
+        try {
+
+
+            let path = join(__dirname, "templates", "recovery-password.ejs");
+            const templatePath = path.replace("dist", "src");
+            const html = await ejs.renderFile(templatePath, { token });
+
+            path = join(__dirname, "templates", 'assets', 'download.webp');
+            const logoPath = path.replace("dist", "src");
+
+            const info = await this.transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Recuperação de Senha",
+                text: `Clique no link para recuperar sua senha: http://localhost:3000/auth/recovery-password?token=${token}`,
+                html,
+                attachments: [{
+                        filename: 'logo.png',
+                        path: logoPath,
+                        cid: 'logo_cid'
+                    }]
+            })
+        } catch (error) {
+            console.error("Error sending email: ", error);
+            throw error;
+        }
+    }
 }
