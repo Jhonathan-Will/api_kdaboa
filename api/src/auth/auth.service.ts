@@ -1,5 +1,4 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { GerenteModel } from 'src/gerente/interface/gerente.model';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { LoginDTO } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -7,11 +6,12 @@ import { EmailService } from 'src/email/email.service';
 import * as bcrypt from 'bcrypt';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
     constructor(
-        private gerenteModel: GerenteModel,
+        private usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly email: EmailService
     ) {}
@@ -24,7 +24,7 @@ export class AuthService {
             );
         }
 
-        const verify = await this.gerenteModel.verificaExistencia(gerente.email);
+        const verify = await this.usersService.getUserByEmail(gerente.email);
         if (verify) {
             throw new HttpException(
                 { status: 400, error: 'Gerente já existe' },
@@ -56,14 +56,20 @@ export class AuthService {
         const sal = await bcrypt.genSalt(10);
         gerente.senha = await bcrypt.hash(gerente.senha, sal);
 
-        await this.gerenteModel.criarGerente(gerente, statusCriado);
+        await this.usersService.createUser({
+                nome_usuario: gerente.nome,
+                email: gerente.email,
+                senha: gerente.senha,
+                tipo: "Gerente",
+                status: statusCriado,
+            });
 
         return { message: 'Verifique seu e-mail' };
     }
 
     async verifyEmail(token: string) {
         const decodificado = this.jwtService.verify(token);
-        const usuario = await this.gerenteModel.verificaExistencia(decodificado.email);
+        const usuario = await this.usersService.getUserByEmail(decodificado.email);
 
         const statusVerificado = Number(process.env.STATUS_VERIFICADO);
         const statusCriado = Number(process.env.STATUS_CRIADO);
@@ -83,7 +89,7 @@ export class AuthService {
                 );
             }
 
-            const novoUsuario = await this.gerenteModel.atualizaGerente(usuario.id_usuario, { status: statusVerificado });
+            const novoUsuario = await this.usersService.updateUser(usuario.id_usuario, { status: statusVerificado });
             const payload = {
                 email: novoUsuario.email,
                 sub: novoUsuario.id_usuario,
@@ -101,7 +107,7 @@ export class AuthService {
     }
 
     async login(user: LoginDTO) {
-        const response = await this.gerenteModel.verificaExistencia(user.email);
+        const response = await this.usersService.getUserByEmail(user.email);
 
         if (response) {
             if (bcrypt.compareSync(user.senha, response.senha)) {
@@ -129,7 +135,7 @@ export class AuthService {
     }
 
     async sendChangePasswordEmail(email: ChangeSenhaDTO) {
-        const usuario = await this.gerenteModel.verificaExistencia(email.email);
+        const usuario = await this.usersService.getUserByEmail(email.email);
 
         if (usuario) {
             if (usuario.status === Number(process.env.STATUS_CRIADO)) {
@@ -163,7 +169,7 @@ export class AuthService {
 
     async verifyChangePasswordEmail(token: string) {
         const decodificado = this.jwtService.verify(token);
-        const usuario = await this.gerenteModel.verificaExistencia(decodificado.email);
+        const usuario = await this.usersService.getUserByEmail(decodificado.email);
 
         if (usuario) {
             if (usuario.status === Number(process.env.STATUS_CRIADO)) {
@@ -191,7 +197,7 @@ export class AuthService {
     }
 
     async changePassword(novaSenha: NewPassword, user: any) {
-        const usuario = await this.gerenteModel.verificaExistencia(user.email);
+        const usuario = await this.usersService.getUserByEmail(user.email);
 
         if (usuario) {
             if (usuario.status === Number(process.env.STATUS_CRIADO)) {
@@ -204,7 +210,7 @@ export class AuthService {
             const sal = await bcrypt.genSalt(10);
             const data = {senha: await bcrypt.hash(novaSenha.senha, sal)}
 
-            await this.gerenteModel.atualizaGerente(usuario.id_usuario, data);
+            await this.usersService.updateUser(usuario.id_usuario, data);
 
             return { message: 'Senha alterada com sucesso' };
         }

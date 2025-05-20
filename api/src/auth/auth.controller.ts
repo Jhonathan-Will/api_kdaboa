@@ -39,9 +39,12 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
     @Get("verify")
-    async verifyEmail(@Query('token') token: string) {
-        console.log(token)
-        return await this.authService.verifyEmail(token);
+    async verifyEmail(@Query('token') token: string, @Res() res: any) {
+        await this.authService.verifyEmail(token).then((response) => {
+            res.redirect(`${process.env.FRONTEND_URL}/`)
+        }).catch((error)  => {
+            return error;
+        });
     }
 
     //Rotas de Troca de Senha
