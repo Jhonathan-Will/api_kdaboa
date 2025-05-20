@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -39,9 +39,12 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
     @Get("verify")
-    async verifyEmail(@Query('token') token: string) {
-        console.log(token)
-        return await this.authService.verifyEmail(token);
+    async verifyEmail(@Query('token') token: string, @Res() res: any) {
+        await this.authService.verifyEmail(token).then((response) => {
+            res.redirect(`${process.env.FRONTEND_URL}/`)
+        }).catch((error)  => {
+            return error;
+        });
     }
 
     //Rotas de Troca de Senha
@@ -60,8 +63,12 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
     @Get("recovery-password")
-    async verificaEmailTrocaSenha(@Query('token') token: string) {
-        return await this.authService.verifyChangePasswordEmail(token);
+    async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any) {
+        await this.authService.verifyChangePasswordEmail(token).then((response) => {
+            return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha?token=${response.token}`);
+        }).catch((error) => {
+            return error;
+        });
     }
 
 
