@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -60,9 +60,13 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
     @Get("recovery-password")
-    async verificaEmailTrocaSenha(@Query('token') token: string) {
-        return await this.authService.verifyChangePasswordEmail(token);
-    }
+    async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any) {
+        await this.authService.verifyChangePasswordEmail(token).then((response) => {
+            return res.redirect(`http://localhost:5173/alterar-senha?token=${response.token}`);
+        }).catch((error) => {
+            return error;
+        });
+    }
 
 
     @ApiBearerAuth('Authorization')
