@@ -9,22 +9,30 @@ import { AllExceptionsFilter } from './common/filter/http-execption.filter';
 import * as dotenv from 'dotenv';
 
 import * as express from 'express';
+import * as cookieParser from 'cookie-parser';
+
 import { join } from 'path';
 
 dotenv.config();
 
 async function bootstrap() {
   
-  const app = await NestFactory.create(AppModule,  {cors: true});
+  const app = await NestFactory.create(AppModule);
 
   app.use('/favicon.ico', express.static(join(__dirname, '..', 'favicon.ico')));
 
-  const allowedHeaders = process.env.CORS_ALLOWED_HEADERS || [];
+  const allowedHeaders = process.env.CORS_ALLOWED_HEADERS?.split(',') || [];
+
   app.enableCors({
     origin: process.env.CORS_ORIGIN,
     methods: process.env.CORS_METHODS,
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
     allowedHeaders})
 
+  app.use(cookieParser());
+  
   app.useGlobalPipes(new ValidationPipe({
       transform: true,
       whitelist: true,

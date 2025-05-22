@@ -65,7 +65,11 @@ export class AuthController {
     @Get("recovery-password")
     async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any) {
         await this.authService.verifyChangePasswordEmail(token).then((response) => {
-            return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha?token=${response.token}`);
+            res.cookie('token', response.token, {   httpOnly: true,
+                                                    secure: false,       
+                                                    sameSite: 'strict',
+                                                    path: '/'})
+            return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha`);
         }).catch((error) => {
             return error;
         });
@@ -81,7 +85,11 @@ export class AuthController {
     @ApiBody({ type: NewPassword })
     @Put("change-password")
     async trocaSenha(@Body() novaSenha: NewPassword, @Req() req: any) {
-            return await this.authService.changePassword(novaSenha, req.user);
+        return await this.authService.changePassword(novaSenha, req.user).then((response) => {
+            console.log(response);
+        }).catch((error) => {
+           console.log(error);
+        });
     }
 
 }
