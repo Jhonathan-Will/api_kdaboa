@@ -10,6 +10,7 @@ import * as dotenv from 'dotenv';
 
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
+import { doubleCsrf } from 'csrf-csrf'
 
 import { join } from 'path';
 
@@ -32,7 +33,28 @@ async function bootstrap() {
     allowedHeaders})
 
   app.use(cookieParser());
-  
+
+  const {
+    doubleCsrfProtection,
+    validateRequest,
+    generateCsrfToken,
+    invalidCsrfTokenError
+  } = doubleCsrf({
+    getSecret: () => process.env.CSRF_SECRET || 'default_secret',
+    cookieName: 'x-csrf-token',
+    size: 64,
+    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+    getSessionIdentifier: (req) => {
+      return req.ip || 'anon';
+    },
+    getCsrfTokenFromRequest: (req) => {
+      return req.headers['x-csrf-token'] as string;
+    },
+  });
+
+  //app.use(doubleCsrfProtection)
+
+
   app.useGlobalPipes(new ValidationPipe({
       transform: true,
       whitelist: true,
@@ -47,7 +69,7 @@ async function bootstrap() {
       }
     }))
 
-  app.useGlobalFilters( new AllExceptionsFilter() );
+  //app.useGlobalFilters( new AllExceptionsFilter() );
 
   const config = new DocumentBuilder()
     .setTitle("API KdABoa")
