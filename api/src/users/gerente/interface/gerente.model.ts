@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CriarGereneteDTO } from "../../auth/dto/create.dto";
+import { CriarGereneteDTO } from "../../../auth/dto/create.dto";
 import { GerenteDTO } from "../dto/gerente.dto";
 @Injectable()
 export class GerenteModel {
