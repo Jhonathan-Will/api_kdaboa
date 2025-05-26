@@ -3,10 +3,10 @@ import { CriarGereneteDTO } from './dto/create.dto';
 import { LoginDTO } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from 'src/email/email.service';
-import * as bcrypt from 'bcrypt';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -40,8 +40,8 @@ export class AuthService {
             );
         }
 
-        const payload = { email: gerente.email, status: statusCriado };
-        const token = this.jwtService.sign(payload, { expiresIn: '1h' });
+        const payload = {email: gerente.email, status: statusCriado};
+        const token = this.jwtService.sign(payload);
 
         try {
             await this.email.sendVerificationEmail(gerente.email, token, gerente.nome);
@@ -89,15 +89,8 @@ export class AuthService {
                 );
             }
 
-            const novoUsuario = await this.usersService.updateUser(usuario.id_usuario, { status: statusVerificado });
-            const payload = {
-                email: novoUsuario.email,
-                sub: novoUsuario.id_usuario,
-                status: novoUsuario.status,
-                tipo: novoUsuario.tipo
-            };
-            const token = this.jwtService.sign(payload, { expiresIn: '1h' });
-            return { message: 'Email verificado com sucesso', token };
+            await this.usersService.updateUser(usuario.id_usuario, { status: statusVerificado });
+            return { message: 'Email verificado com sucesso'};
         }
 
         throw new HttpException(
@@ -118,7 +111,7 @@ export class AuthService {
                     tipo: response.tipo
                 };
                 return {
-                    access_token: this.jwtService.sign(payload),
+                    access_token: this.jwtService.sign(payload),//mudar para csrf
                 };
             } else {
                 throw new HttpException(
@@ -183,8 +176,8 @@ export class AuthService {
                 sub: usuario.id_usuario,
                 status: usuario.status
             };
-            
             const newToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+            
 
             return { message: 'Email verificado com sucesso', token: newToken };
         }

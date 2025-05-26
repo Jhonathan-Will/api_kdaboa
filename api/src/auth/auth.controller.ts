@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -20,7 +21,15 @@ export class AuthController {
     @ApiBody({ type: CriarGereneteDTO })
     @Post("singin")
     async createGerente(@Body() gerente: CriarGereneteDTO) {
-        return await this.authService.singIn(gerente);
+        try {
+            // lógica aqui
+            return await this.authService.singIn(gerente).catch((error) => {
+                console.log(error)
+            });
+        } catch (err) {
+            console.error('Erro no signin:', err);
+
+        }
     }
 
     @ApiOperation({ summary: 'Faz login' })
@@ -38,13 +47,15 @@ export class AuthController {
     @ApiResponse({ status: 400, description: 'Requisição inválida ou email já verificado' })
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
-    @Get("verify")
-    async verifyEmail(@Query('token') token: string, @Res() res: any) {
-        await this.authService.verifyEmail(token).then((response) => {
-            res.redirect(`${process.env.FRONTEND_URL}/`)
-        }).catch((error)  => {
-            return error;
-        });
+    @Get('verify')
+    async verifyEmail(@Query('token') token: string, @Res() res: Response) {
+    try {
+        await this.authService.verifyEmail(token);
+        return res.redirect(`${process.env.FRONTEND_URL}/`);
+    } catch (error) {
+        console.error('Erro na verificação de e-mail:', error);
+        return res.status(400).json({ message: 'Token inválido ou expirado' });
+    }
     }
 
     //Rotas de Troca de Senha
@@ -63,9 +74,22 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
     @Get("recovery-password")
-    async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any) {
+    async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any, @Req() req: any) {
         await this.authService.verifyChangePasswordEmail(token).then((response) => {
-            return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha?token=${response.token}`);
+
+            const sessionId = req.ip || 'anon';
+            const csrfToken = generateCsrfToken(sessionId);
+
+            res.cookie('x-csrf-token', csrfToken,{httpOnly: false,
+                                                  secure: false,       
+                                                  sameSite: 'strict',
+                                                  path:'/auth/change-password'})
+
+            res.cookie('token', response.token,{httpOnly: true,
+                                                secure:  true,
+                                                sameSite: 'strict',
+                                                path:'/auth/change-password'})
+            return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha`);
         }).catch((error) => {
             return error;
         });
@@ -81,7 +105,27 @@ export class AuthController {
     @ApiBody({ type: NewPassword })
     @Put("change-password")
     async trocaSenha(@Body() novaSenha: NewPassword, @Req() req: any) {
-            return await this.authService.changePassword(novaSenha, req.user);
+
+        const sessionId = req.ip || 'anon';
+        const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
+        console.log(validateRequest(sessionId, csrfToken)) 
+
+        return await this.authService.changePassword(novaSenha, req.user).then((response) => {
+            console.log(response);
+        }).catch((error) => {
+           console.log(error);
+        });
     }
 
+}
+
+
+function validateRequest(sessionId: string, csrfToken: string): boolean {
+    if (!sessionId || !csrfToken) {
+        throw new Error('Invalid CSRF token or session');
+    }
+    return true;
+}
+function generateCsrfToken(sessionId: string): string {
+    return Buffer.from(sessionId + Date.now().toString()).toString('base64');
 }
