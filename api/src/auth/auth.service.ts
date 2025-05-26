@@ -44,7 +44,7 @@ export class AuthService {
         const token = this.jwtService.sign(payload, { expiresIn: '1h' });
 
         try {
-            await this.email.sendVerificationEmail(gerente.email, token);
+            await this.email.sendVerificationEmail(gerente.email, token, gerente.nome);
         } catch (err) {
             console.log('erro ao enviar email', err);
             throw new HttpException(
@@ -150,7 +150,7 @@ export class AuthService {
                 { expiresIn: '1h' }
             );
             try {
-                await this.email.sendRecoveryPasswordEmail(usuario.email, token);
+                await this.email.sendRecoveryPasswordEmail(usuario.email, token, usuario.nome_usuario);
             } catch (err) {
                 console.log('erro ao enviar email', err);
                 throw new HttpException(
