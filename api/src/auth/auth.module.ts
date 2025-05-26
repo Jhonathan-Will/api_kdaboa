@@ -11,8 +11,14 @@ import { UsersModule } from 'src/users/users.module';
     imports: [
         PassportModule,
         UsersModule,
-        JwtModule.register({
-            secret: process.env.SECRET,
+        JwtModule.registerAsync({
+            useFactory: () => ({
+                privateKey: (process.env.PRIVATE_KEY ?? (() => { throw new Error('PRIVATE_KEY is not defined'); })()).replace(/\\n/g, '\n'),
+                publicKey: (process.env.PUBLIC_KEY ?? (() => { throw new Error('PUBLIC KEY is not defined'); })()).replace(/\\n/g, '\n'),
+                signOptions: {
+                    algorithm: 'RS256',
+                }
+            }),
         }),
         EmailModule
     ],

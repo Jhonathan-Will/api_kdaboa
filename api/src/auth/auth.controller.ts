@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
@@ -20,9 +21,6 @@ export class AuthController {
     @ApiBody({ type: CriarGereneteDTO })
     @Post("singin")
     async createGerente(@Body() gerente: CriarGereneteDTO) {
-        console.log("aaaaaa")
-
-        
         try {
             // lógica aqui
             return await this.authService.singIn(gerente).catch((error) => {
@@ -49,13 +47,15 @@ export class AuthController {
     @ApiResponse({ status: 400, description: 'Requisição inválida ou email já verificado' })
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiQuery({name: "token", required: true, description: "Token de verificação"})
-    @Get("verify")
-    async verifyEmail(@Query('token') token: string, @Res() res: any) {
-        await this.authService.verifyEmail(token).then((response) => {
-            res.redirect(`${process.env.FRONTEND_URL}/`)
-        }).catch((error)  => {
-            return error;
-        });
+    @Get('verify')
+    async verifyEmail(@Query('token') token: string, @Res() res: Response) {
+    try {
+        await this.authService.verifyEmail(token);
+        return res.redirect(`${process.env.FRONTEND_URL}/`);
+    } catch (error) {
+        console.error('Erro na verificação de e-mail:', error);
+        return res.status(400).json({ message: 'Token inválido ou expirado' });
+    }
     }
 
     //Rotas de Troca de Senha

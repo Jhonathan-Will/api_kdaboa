@@ -74,7 +74,7 @@
       <p>Para concluir a verificação da sua conta, clique no botão abaixo.</p>
 
       <div class="button-container">
-        <a href="http://localhost:3000/auth/verify?token=<%= token %>" class="btn">Confirmar o endereço de e-mail</a>
+       <a href="http://localhost:3000/auth/verify?token=<%= encodeURIComponent(token) %>" class="btn">Confirmar Endereço de Email</a>
       </div>
 
       <p>Se você não reconhece esta solicitação ou não sabe do que se trata, pode ignorar este e-mail por segurança.</p>

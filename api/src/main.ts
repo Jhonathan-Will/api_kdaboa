@@ -40,7 +40,7 @@ async function bootstrap() {
     generateCsrfToken,
     invalidCsrfTokenError
   } = doubleCsrf({
-    getSecret: () => process.env.CSRF_SECRET || 'default_secret',
+    getSecret: () => process.env.SECRET || 'default_secret',
     cookieName: 'x-csrf-token',
     size: 64,
     ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
@@ -51,9 +51,6 @@ async function bootstrap() {
       return req.headers['x-csrf-token'] as string;
     },
   });
-
-  //app.use(doubleCsrfProtection)
-
 
   app.useGlobalPipes(new ValidationPipe({
       transform: true,
@@ -69,7 +66,7 @@ async function bootstrap() {
       }
     }))
 
-  //app.useGlobalFilters( new AllExceptionsFilter() );
+  app.useGlobalFilters( new AllExceptionsFilter() );
 
   const config = new DocumentBuilder()
     .setTitle("API KdABoa")
