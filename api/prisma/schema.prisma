@@ -107,7 +107,7 @@ model Usuario {
   senha              String           @db.VarChar(255)
   tipo               Usuario_tipo
   status             Int?             @db.TinyInt
-  foto               String           @db.VarChar(255)
+  foto               String?           @db.VarChar(255)
   id_estabelecimento Int?
   Estabelecimento    Estabelecimento? @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onUpdate: NoAction, map: "Usuario_ibfk_1")
 
