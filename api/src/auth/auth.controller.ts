@@ -68,6 +68,7 @@ export class AuthController {
         return await this.authService.sendChangePasswordEmail(email);
     }
 
+    @UseGuards(AuthGuard('jwt'))
     @ApiOperation({ summary: 'Verifica e-mail para troca de senha' })
     @ApiResponse({ status: 200, description: 'E-mail verificado com sucesso.' })
     @ApiResponse({ status: 400, description: 'Token inválido ou expirado.' })
@@ -76,19 +77,16 @@ export class AuthController {
     @Get("recovery-password")
     async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any, @Req() req: any) {
         await this.authService.verifyChangePasswordEmail(token).then((response) => {
-
-            const sessionId = req.ip || 'anon';
-            const csrfToken = generateCsrfToken(sessionId);
-
-            res.cookie('x-csrf-token', csrfToken,{httpOnly: false,
+            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: false,
                                                   secure: false,       
-                                                  sameSite: 'strict',
-                                                  path:'/auth/change-password'})
+                                                  sameSite: 'lax',
+                                                  path:"/"})
 
             res.cookie('token', response.token,{httpOnly: true,
                                                 secure:  true,
-                                                sameSite: 'strict',
-                                                path:'/auth/change-password'})
+                                                sameSite: 'none',
+                                                path:`/`})
+
             return res.redirect(`${process.env.FRONTEND_URL}/alterar-senha`);
         }).catch((error) => {
             return error;
@@ -106,26 +104,13 @@ export class AuthController {
     @Put("change-password")
     async trocaSenha(@Body() novaSenha: NewPassword, @Req() req: any) {
 
-        const sessionId = req.ip || 'anon';
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
-        console.log(validateRequest(sessionId, csrfToken)) 
 
-        return await this.authService.changePassword(novaSenha, req.user).then((response) => {
+        return await this.authService.changePassword(novaSenha, req.user, csrfToken).then((response) => {
             console.log(response);
         }).catch((error) => {
            console.log(error);
         });
     }
 
-}
-
-
-function validateRequest(sessionId: string, csrfToken: string): boolean {
-    if (!sessionId || !csrfToken) {
-        throw new Error('Invalid CSRF token or session');
-    }
-    return true;
-}
-function generateCsrfToken(sessionId: string): string {
-    return Buffer.from(sessionId + Date.now().toString()).toString('base64');
 }

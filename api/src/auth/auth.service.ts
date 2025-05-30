@@ -7,13 +7,15 @@ import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { CsrfService } from 'src/security/csrf/csrf.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private usersService: UsersService,
         private readonly jwtService: JwtService,
-        private readonly email: EmailService
+        private readonly email: EmailService,
+        private csrf: CsrfService,
     ) {}
 
     async singIn(gerente: CriarGereneteDTO) {
@@ -82,7 +84,7 @@ export class AuthService {
         }
 
         if (usuario) {
-            if (usuario.status === statusVerificado && decodificado.status !== statusCriado) {
+            if (usuario.status === statusVerificado && decodificado.status == statusCriado) {
                 throw new HttpException(
                     { status: 400, error: "Email já verificado" },
                     400,
@@ -111,7 +113,7 @@ export class AuthService {
                     tipo: response.tipo
                 };
                 return {
-                    access_token: this.jwtService.sign(payload),//mudar para csrf
+                    access_token: this.jwtService.sign(payload, {expiresIn: '10min'}),//mudar para csrf
                 };
             } else {
                 throw new HttpException(
@@ -140,7 +142,7 @@ export class AuthService {
 
             const token = this.jwtService.sign(
                 { email: usuario.email, id: usuario.id_estabelecimento, status: usuario.tipo },
-                { expiresIn: '1h' }
+                { expiresIn: '10min' }
             );
             try {
                 await this.email.sendRecoveryPasswordEmail(usuario.email, token, usuario.nome_usuario);
@@ -163,7 +165,6 @@ export class AuthService {
     async verifyChangePasswordEmail(token: string) {
         const decodificado = this.jwtService.verify(token);
         const usuario = await this.usersService.getUserByEmail(decodificado.email);
-
         if (usuario) {
             if (usuario.status === Number(process.env.STATUS_CRIADO)) {
                 throw new HttpException(
@@ -176,10 +177,10 @@ export class AuthService {
                 sub: usuario.id_usuario,
                 status: usuario.status
             };
-            const newToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-            
 
-            return { message: 'Email verificado com sucesso', token: newToken };
+            const newToken = this.jwtService.sign(payload, {expiresIn: '10min'});
+            const csrfToken = this.csrf.generateToken({sub: usuario.id_usuario, status: usuario.status, tipo: usuario.tipo})
+            return { message: 'Email verificado com sucesso', token: newToken, csrfToken};
         }
 
 
@@ -189,27 +190,35 @@ export class AuthService {
         );
     }
 
-    async changePassword(novaSenha: NewPassword, user: any) {
-        const usuario = await this.usersService.getUserByEmail(user.email);
+    async changePassword(novaSenha: NewPassword, user: any, csrfToken: string) {
+        if(this.csrf.validateToken(csrfToken)){
 
-        if (usuario) {
-            if (usuario.status === Number(process.env.STATUS_CRIADO)) {
-                throw new HttpException(
-                    { status: 400, error: "Email não verificado" },
-                    400,
-                );
+            const usuario = await this.usersService.getUserByEmail(user.email);
+
+            if (usuario) {
+                if (usuario.status === Number(process.env.STATUS_CRIADO)) {
+                    throw new HttpException(
+                        { status: 400, error: "Email não verificado" },
+                        400,
+                    );
+                }
+
+                const sal = await bcrypt.genSalt(10);
+                const data = {senha: await bcrypt.hash(novaSenha.senha, sal)}
+
+                await this.usersService.updateUser(usuario.id_usuario, data);
+
+                return { message: 'Senha alterada com sucesso' };
             }
 
-            const sal = await bcrypt.genSalt(10);
-            const data = {senha: await bcrypt.hash(novaSenha.senha, sal)}
-
-            await this.usersService.updateUser(usuario.id_usuario, data);
-
-            return { message: 'Senha alterada com sucesso' };
+            throw new HttpException(
+                { status: 400, error: "Usuário não encontrado" },
+                400,
+            );
         }
 
         throw new HttpException(
-            { status: 400, error: "Usuário não encontrado" },
+            { status: 400, error: "Requisição invalida" },
             400,
         );
     }

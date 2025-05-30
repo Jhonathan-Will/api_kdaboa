@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,7 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           if (authHeader?.startsWith('Bearer ')) {
             return authHeader.split(' ')[1];
           }
-
+          
+          if (req?.query && typeof req.query.token === 'string') {
+            return req.query.token;
+          }
           return null;
         }
       ]),

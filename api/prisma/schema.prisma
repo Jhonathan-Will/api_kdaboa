@@ -25,7 +25,7 @@ model Contato {
 
 model Endereco {
   id_endereco     Int              @id @default(autoincrement())
-  rua             String           @db.VarChar(200)
+  logradouro      String           @db.VarChar(200)
   numero          String           @db.VarChar(10)
   complemento     String?          @db.VarChar(100)
   bairro          String           @db.VarChar(100)
@@ -40,7 +40,7 @@ model Estabelecimento {
   id_estabelecimento        Int                         @id @default(autoincrement())
   nome                      String                      @db.VarChar(200)
   cnpj                      String                      @db.VarChar(14)
-  descricao                 String                      @db.VarChar(500)
+  descricao                 String                      @db.VarChar(1000)
   status                    Int?                        @db.TinyInt
   imagem                    String?                     @db.VarChar(200)
   id_endereco               Int?                        @unique(map: "id_endereco")
@@ -50,6 +50,8 @@ model Estabelecimento {
   Estabelecimento_Categoria Estabelecimento_Categoria[]
   Evento                    Evento[]
   Usuario                   Usuario[]
+
+  Galeria Galeria[] @relation(map: "fk_est")
 }
 
 model Estabelecimento_Categoria {
@@ -62,15 +64,22 @@ model Estabelecimento_Categoria {
   @@index([id_categoria], map: "id_categoria")
 }
 
+model Galeria {
+  id_gal             Int              @id @default(autoincrement())
+  foto               String           @db.VarChar(255)
+  id_estabelecimento Int
+  Estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: NoAction, map: "fk_est")
+}
+
 model Evento {
   id_evento          Int                @id @default(autoincrement())
   nome_evento        String             @db.VarChar(200)
-  descricao          String?            @db.VarChar(500)
-  data_criacao       DateTime?          @db.Date
-  data_inicio        DateTime?          @db.Date
-  data_fim           DateTime?          @db.Date
+  descricao          String?            @db.VarChar(1000)
+  data_criacao       DateTime?          @db.DateTime()
+  data_inicio        DateTime?          @db.DateTime()
+  data_fim           DateTime?          @db.DateTime()
   estatus            Int?               @db.TinyInt
-  imagem             String?            @db.VarChar(200)
+  foto               String?            @db.VarChar(200)
   id_estabelecimento Int?
   id_endereco        Int?
   Estabelecimento    Estabelecimento?   @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "Evento_ibfk_1")
@@ -98,6 +107,7 @@ model Usuario {
   senha              String           @db.VarChar(255)
   tipo               Usuario_tipo
   status             Int?             @db.TinyInt
+  foto               String           @db.VarChar(255)
   id_estabelecimento Int?
   Estabelecimento    Estabelecimento? @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onUpdate: NoAction, map: "Usuario_ibfk_1")
 
