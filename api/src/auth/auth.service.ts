@@ -14,8 +14,8 @@ export class AuthService {
     constructor(
         private usersService: UsersService,
         private readonly jwtService: JwtService,
-        private csrf: CsrfService,
         private readonly email: EmailService,
+        private csrf: CsrfService,
     ) {}
 
     async singIn(gerente: CriarGereneteDTO) {
