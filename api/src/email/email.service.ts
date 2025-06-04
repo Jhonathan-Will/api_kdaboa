@@ -19,12 +19,12 @@ export class EmailService {
         });
     }
 
-    async sendVerificationEmail(email: string, token: string) {
+    async sendVerificationEmail(email: string, token: string, nome: string) {
         try {
 
             let path = join(__dirname, "templates", "verification.ejs");
             const templatePath = path.replace("dist", "src");
-            const html = await ejs.renderFile(templatePath, { token });
+            const html = await ejs.renderFile(templatePath, { token, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
             const logoPath = path.replace("dist", "src");
@@ -73,6 +73,7 @@ export class EmailService {
                         path: logoPath,
                         cid: 'logo_cid'
                     }]
+           
             })
         } catch (error) {
             console.error("Error sending email: ", error);

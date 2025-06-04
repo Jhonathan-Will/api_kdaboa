@@ -46,7 +46,7 @@ export class AuthService {
         const token = this.jwtService.sign(payload);
 
         try {
-            await this.email.sendVerificationEmail(gerente.email, token);
+            await this.email.sendVerificationEmail(gerente.email, token, gerente.nome);
         } catch (err) {
             console.log('erro ao enviar email', err);
             throw new HttpException(

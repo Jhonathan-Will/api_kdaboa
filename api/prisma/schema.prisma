@@ -32,8 +32,9 @@ model Endereco {
   cidade          String           @db.VarChar(100)
   estado          String           @db.Char(2)
   cep             String           @db.VarChar(8)
-  Estabelecimento Estabelecimento?
   Evento          Evento[]
+
+  Estabelecimento_Endereco Estabelecimento_Endereco[] @relation(map: "fk_endereco")
 }
 
 model Estabelecimento {
@@ -43,15 +44,21 @@ model Estabelecimento {
   descricao                 String                      @db.VarChar(1000)
   status                    Int?                        @db.TinyInt
   imagem                    String?                     @db.VarChar(200)
-  id_endereco               Int?                        @unique(map: "id_endereco")
   id_contato                Int?                        @unique(map: "id_contato")
   Contato                   Contato?                    @relation(fields: [id_contato], references: [id_contato], onDelete: NoAction, map: "fk_estabelecimento_contato")
-  Endereco                  Endereco?                   @relation(fields: [id_endereco], references: [id_endereco], onDelete: NoAction, map: "fk_estabelecimento_endereco")
   Estabelecimento_Categoria Estabelecimento_Categoria[]
   Evento                    Evento[]
   Usuario                   Usuario[]
+  Galeria Galeria[] @relation(map: "fk_est"
+  Estabelecimento_Endereco Estabelecimento_Endereco[] @relation(map: "fk_estabelecimento")
+}
 
-  Galeria Galeria[] @relation(map: "fk_est")
+model Estabelecimento_Endereco {
+  id                        Int                         @id @default(autoincrement())
+  id_endereco               Int                         @unique(map: "id_endereco")
+  id_estabelecimento        Int                         @unique(map: "id_estabelecimento")
+  Estabelecimento           Estabelecimento?            @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: NoAction,  map: "fk_estabelecimento")
+  Endereco                  Endereco?                   @relation(fields: [id_endereco], references: [id_endereco], onDelete: NoAction, map: "fk_endereco")
 }
 
 model Estabelecimento_Categoria {
@@ -103,7 +110,7 @@ model Evento_Categoria {
 model Usuario {
   id_usuario         Int              @id @default(autoincrement())
   nome_usuario       String           @db.VarChar(200)
-  email              String           @db.VarChar(255) @unique
+  email              String           @db.VarChar(191) @unique
   senha              String           @db.VarChar(255)
   tipo               Usuario_tipo
   status             Int?             @db.TinyInt

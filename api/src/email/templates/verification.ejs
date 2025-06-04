@@ -52,7 +52,7 @@
       display: inline-block; /* Garante que o botão seja exibido corretamente */
     }
 
-    .btn a {
+    .button-container a {
       color: #ffffff; /* Texto branco */
       text-decoration: none; /* Remove o sublinhado do link */
     }
@@ -70,8 +70,8 @@
     </div>
 
     <div class="text">
-      <p>Olá, Gerente!</p>
-      <p>Para concluir a verificação da sua conta, clique no botão abaixo.</p>
+      <p>Olá, <%= nome %>!</p>
+      <p>Para concluir a verificação da sua conta e ter acesso as suas funcionalidades, clique no botão abaixo.</p>
 
       <div class="button-container">
        <a href="http://localhost:3000/auth/verify?token=<%= encodeURIComponent(token) %>" class="btn">Confirmar Endereço de Email</a>
