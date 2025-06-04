@@ -51,13 +51,13 @@ export class EmailService {
         }
     }
 
-    async sendRecoveryPasswordEmail(email: string, token: string) {
+    async sendRecoveryPasswordEmail(email: string, token: string, nome: string) {
         try {
 
 
             let path = join(__dirname, "templates", "recovery-password.ejs");
             const templatePath = path.replace("dist", "src");
-            const html = await ejs.renderFile(templatePath, { token });
+            const html = await ejs.renderFile(templatePath, { token, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
             const logoPath = path.replace("dist", "src");

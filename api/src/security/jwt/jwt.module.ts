@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { RefreshGuard } from './guard/refresh.guard';
+import { RefreshService } from './refersh.service';
 
+@Global()
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -14,7 +17,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
       }),
     }),
   ],
-  providers: [JwtStrategy],
-  exports: [JwtModule, JwtStrategy],
+  providers: [JwtStrategy, RefreshGuard, RefreshService],
+  exports: [JwtModule, JwtStrategy, RefreshGuard, RefreshService],
 })
 export class SecurityJwtModule {}

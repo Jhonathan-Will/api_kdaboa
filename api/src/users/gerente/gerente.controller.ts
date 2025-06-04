@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 
 @Controller("gerente")
@@ -9,6 +9,4 @@ export class GerenteController {
     getGerente() {
         return "Gerente";
     }
-
-
 }
