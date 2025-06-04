@@ -7,6 +7,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBe
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -38,8 +39,27 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiBody({ type: LoginDTO })
     @Post("login")
-    async login(@Body() user: LoginDTO) {
-        return await this.authService.login(user)
+    async login(@Body() user: LoginDTO, @Res() res: any) {
+        return await this.authService.login(user).then((response) => {
+            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: false,
+                                                  secure: true,       
+                                                  sameSite: 'lax',
+                                                  path:"/"})
+
+            res.cookie('token', response.access_token,{httpOnly: true,
+                                                secure:  true,
+                                                sameSite: 'lax',
+                                                path:`/`})
+
+            res.cookie('refresh_token', response.refresh_token, {httpOnly: true,
+                                                                secure: true,
+                                                                sameSite: 'lax',
+                                                                path:'/'})
+            res.send({message: 'login feito com sucesso'})
+        }).catch((error) => {
+            console.log(error)
+            throw error
+        })
     }
 
     @ApiOperation({ summary: 'Envia e-mail de verificação' })
@@ -111,6 +131,13 @@ export class AuthController {
         }).catch((error) => {
            console.log(error);
         });
+    }
+
+
+    @Get("dados")
+    @UseGuards(RefreshGuard) 
+    pegarDados(@Req() req: any){
+        return this.authService.pegarDados(req.user)
     }
 
 }

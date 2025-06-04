@@ -12,23 +12,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
-          if(req?.cookies && req.cookies['token']) {
-            return req.cookies['token'];
+          if (req?.query && typeof req.query.token === 'string') {
+            return req.query.token;
           }
 
           const authHeader = req.headers.authorization;
           if (authHeader?.startsWith('Bearer ')) {
             return authHeader.split(' ')[1];
           }
-          
-          if (req?.query && typeof req.query.token === 'string') {
-            return req.query.token;
+           
+          if(req?.cookies && req.cookies['token']) {
+            return req.cookies['token'];
           }
           return null;
         }
       ]),
       ignoreExpiration: false,
       secretOrKey: process.env.PUBLIC_KEY.replace(/\\n/g, '\n') as string,
+      algorithms: ['RS256'], // se usar chave pública/privada
     });
   }
 

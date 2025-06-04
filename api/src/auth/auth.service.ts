@@ -14,8 +14,8 @@ export class AuthService {
     constructor(
         private usersService: UsersService,
         private readonly jwtService: JwtService,
-        private readonly email: EmailService,
         private csrf: CsrfService,
+        private readonly email: EmailService,
     ) {}
 
     async singIn(gerente: CriarGereneteDTO) {
@@ -102,18 +102,22 @@ export class AuthService {
     }
 
     async login(user: LoginDTO) {
-        const response = await this.usersService.getUserByEmail(user.email);
+        const usuario = await this.usersService.getUserByEmail(user.email);
 
-        if (response) {
-            if (bcrypt.compareSync(user.senha, response.senha)) {
+        if (usuario) {
+            if (bcrypt.compareSync(user.senha, usuario.senha)) {
                 const payload = {
-                    email: response.email,
-                    sub: response.id_usuario,
-                    status: response.status,
-                    tipo: response.tipo
+                    email: usuario.email,
+                    sub: usuario.id_usuario,
+                    status: usuario.status,
+                    tipo: usuario.tipo
                 };
+                const csrfToken = this.csrf.generateToken({sub: usuario.id_usuario, status: usuario.status, tipo: usuario.tipo})
+                const refresh_token = {sub: usuario.id_usuario, status: usuario.status, email: usuario.email, tipo: usuario.tipo, secret: process.env.REFRESH_SECRET}
                 return {
-                    access_token: this.jwtService.sign(payload, {expiresIn: '10min'}),//mudar para csrf
+                    access_token: this.jwtService.sign(payload, {expiresIn: '10s'}),
+                    csrfToken,
+                    refresh_token: this.jwtService.sign(refresh_token)
                 };
             } else {
                 throw new HttpException(
@@ -236,4 +240,10 @@ export class AuthService {
 
         return !dominiosPermitidos.includes(dominioEmail);
     }
+
+
+    async pegarDados(token: string){
+        return token
+    }
+
 }
