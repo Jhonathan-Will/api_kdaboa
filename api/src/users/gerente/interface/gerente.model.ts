@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CriarGereneteDTO } from "../../../auth/dto/create.dto";
 import { GerenteDTO } from "../dto/gerente.dto";
+import { CriarEstabelecimentoDTO } from "../dto/criarEstabelecimento.dto";
 @Injectable()
 export class GerenteModel {
     constructor(private prisma: PrismaService) {}
@@ -51,5 +52,23 @@ export class GerenteModel {
         }
 
         return gerente;
+    }
+
+    async criarEstabelecimento(data: CriarEstabelecimentoDTO) {
+        return await this.prisma.estabelecimento.create({
+            data:{
+                nome: data.nome,
+                cnpj: data.cnpj,
+                descricao: data.descricao,
+                Estabelecimento_Categoria: {
+                    createMany: {
+                        data: data.categoria.map((categoriaId: number) => ({ id_categoria: categoriaId }))
+                    }
+                }
+            },
+            include: {
+                Estabelecimento_Categoria: true
+            }
+        })
     }
 }

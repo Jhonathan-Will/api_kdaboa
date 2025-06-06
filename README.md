@@ -23,6 +23,8 @@ No caso de quererem ver como está sendo estruturado nosso front-end é só [cli
 - **Ejs**
 - **Cors**
 - **Bcrypt**
+- **Cookies**
+- **CSRF**
 
 ---
 
@@ -81,9 +83,15 @@ para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md
 4. Configure suas variaveis de autenticação
    - Para gerar tokens corretamente preciamos configurar nossas chaves, novamente vamos escrever algumas variaveis no nosso .env
      ```.env
+     REFRESH_SECRET="<seu_secret>
      SECRET="<seu_secret>"
+     PRIVATE_KEY="<chave_rsa_privada>"
+     PUBLIC_KEY="<chave_rsa_publica>"
      ```
-   - O secret é algua senha que vocẽ carrega para dar mais segurança aos tokes, ele pode ser qualquer coisa
+   - O secret e refresh_secret são senhas que vocẽ carrega para dar mais segurança aos tokes, ele pode ser qualquer coisa.
+   
+   - private e public key são chaves RSA que devem ser complementares, para termos nossas proprias chaves podemos usar deste [site](https://cryptotools.net/rsagen), e quando gerado basta apenas copiar e colar sem precisar tirar os espaços ou o cabeçalho.
+
 
 5. Configure suas variaveis para as funções de enviar email
    - Neste projeto estamos usando Nodemailer para enviar emails e verificar se o email em si existe, para isso vamos adicionar mais duas variaveis no .env
@@ -92,12 +100,18 @@ para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md
      EMAIL_PASS="<sua_senha>"
      ALLOWED_DOMAINS="gmail.com,hotmail.com,outlook.com,yahoo.com,icloud.com"
      ```
+     - Para alguns seviços de email devemos adicionar algumas configurações a mais, no nosso caso estamos usando o gmail, mas para outros serviços será necessário adicioar outras configuraçẽos, segue o link para [configurar seu nodemailer](https://nodemailer.com/usage) e [onde você deve configurar seu nodemailer](https://github.com/Jhonathan-Will/api_kdaboa/blob/main/api/src/email/email.service.ts)
+
 6. Configure o cors para integrar com o front-end - **(Opcional)**
    - para que a aplicação aceite requisição de outras paginas e locais configure o cors para não ter problemas, para isso vamos adicionar mais 3 variaveis no .env
      ```.env
      CORS_ORIGIN="http://<URL_que_fara_requisição>"
-     CORS_METHODS="GET,POST,DELETE"
-     CORS_ALLOWED_HEADERS="Authorization,Content-Type"
+     CORS_METHODS="GET,POST,DELETE,PUT"
+     CORS_ALLOWED_HEADERS="Authorization,Content-Type,Application-json,Access-Control-Allow-Credentials,Access-Control-Allow-Origin,X-Requested-With,x-csrf-token"
      ``` 
 
-   - Para alguns seviços de email devemos adicionar algumas configurações a mais, no nosso caso estamos usando o gmail, mas para outros serviços será necessário adicioar outras configuraçẽos, segue o link para [configurar seu nodemailer](https://nodemailer.com/usage) e [onde você deve configurar seu nodemailer](https://github.com/Jhonathan-Will/api_kdaboa/blob/main/api/src/email/email.service.ts)
+7. Mantenha a URL do seu front segura
+  - Para não precisar mudar a URL do front toda vez, criamos esse variavel que guarda ela e é replicada para todo meto que precisar
+    ```env
+    FRONTEND_URL="<url_do_seu_front>"
+    ```
