@@ -14,7 +14,7 @@ export class GerenteController {
     @ApiOperation({ summary: 'Cadastra o estabelecimento do usuário'})
     @Post("/establishment")
     CriarEstabelecimento(@Body() estabelecimento: CriarEstabelecimentoDTO,  @Req() req: any)  {
-        return this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub);
+        return this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub, req.user.tipo);
     }
 
     //rota para cadastrar endereço

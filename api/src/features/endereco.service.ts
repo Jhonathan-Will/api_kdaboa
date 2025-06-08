@@ -7,7 +7,7 @@ export class EnderecoService {
     constructor(private prisma: PrismaService) {}
 
     async cadastrarEndereco(data: CriarEnderecoDTO, id_est: number, user_tipo: string) {
-        if(user_tipo === 'Gerente'){
+        if(user_tipo === 'Gerente'){                                        
 
             return this.prisma.endereco.create({
                 data: {
@@ -26,5 +26,20 @@ export class EnderecoService {
                 }
             })
         }
+    }
+
+    async encontrarEnderecoPorEstabelecimento(id_estabelecimento: number) {
+        return this.prisma.endereco.findMany({
+            where: {
+                Estabelecimento_Endereco: {
+                    some: {
+                        id_estabelecimento: id_estabelecimento
+                    }
+                }
+            },
+            include: {
+                Estabelecimento_Endereco: true
+            }
+        })
     }
 }
