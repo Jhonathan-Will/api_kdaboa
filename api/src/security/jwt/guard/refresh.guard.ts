@@ -6,11 +6,13 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { RefreshService } from '../refersh.service';
+import { CsrfService } from 'src/security/csrf/csrf.service';
 
 @Injectable()
 export class RefreshGuard extends AuthGuard('jwt') {
   constructor(
-    private refreshService: RefreshService
+    private refreshService: RefreshService,
+    private readonly csrf: CsrfService
   ) {
     super();
   }
@@ -27,8 +29,13 @@ export class RefreshGuard extends AuthGuard('jwt') {
 
     try {
       const payload = this.refreshService.verifyRefreshToken(refreshToken);
+      console.log("dentro do refresh guard: ",payload)
       const newAccessToken = this.refreshService.refresh(payload);
+
+      const csrfToken = this.csrf.generateToken({email: payload.email, sub: payload.sub, status: payload.status});
+
       res.cookie('token', newAccessToken, { httpOnly: true, secure: true, sameSite: 'strict', path: '/' });
+      res.cookie('x-csrf-token', csrfToken, { httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
 
       return payload as TUser;
     } catch (e) {

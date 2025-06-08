@@ -115,7 +115,7 @@ export class AuthService {
                 const csrfToken = this.csrf.generateToken({sub: usuario.id_usuario, status: usuario.status, tipo: usuario.tipo})
                 const refresh_token = {sub: usuario.id_usuario, status: usuario.status, email: usuario.email, tipo: usuario.tipo, secret: process.env.REFRESH_SECRET}
                 return {
-                    access_token: this.jwtService.sign(payload, {expiresIn: '10s'}),
+                    access_token: this.jwtService.sign(payload, {expiresIn: '1min'}),
                     csrfToken,
                     refresh_token: this.jwtService.sign(refresh_token)
                 };

@@ -3,10 +3,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { RefreshGuard } from './guard/refresh.guard';
 import { RefreshService } from './refersh.service';
+import { CsrfModule } from '../csrf/csrf.module';
 
 @Global()
 @Module({
   imports: [
+    CsrfModule,
     JwtModule.registerAsync({
       useFactory: () => ({
         privateKey: (process.env.PRIVATE_KEY ?? (() => { throw new Error('PRIVATE_KEY is not defined'); })()).replace(/\\n/g, '\n'),
