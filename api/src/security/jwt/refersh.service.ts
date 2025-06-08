@@ -9,7 +9,7 @@ export class RefreshService{
     refresh(payload: any) {
         if (payload.secret === process.env.REFRESH_SECRET) {
             return this.jwtService.sign({
-                sub: payload.userId,
+                sub: payload.sub,
                 email: payload.email,
                 status: payload.status,
                 tipo: payload.tipo

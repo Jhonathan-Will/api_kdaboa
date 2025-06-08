@@ -49,7 +49,7 @@ model Estabelecimento {
   Estabelecimento_Categoria Estabelecimento_Categoria[]
   Evento                    Evento[]
   Usuario                   Usuario[]
-  Galeria Galeria[] @relation(map: "fk_est"
+  Galeria Galeria[] @relation(map: "fk_est")
   Estabelecimento_Endereco Estabelecimento_Endereco[] @relation(map: "fk_estabelecimento")
 }
 
