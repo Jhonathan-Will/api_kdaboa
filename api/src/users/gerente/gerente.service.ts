@@ -6,15 +6,16 @@ import { CsrfService } from "src/security/csrf/csrf.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
+import { GaleriaService } from "src/features/galeria.service";
 
 @Injectable()
 export class GerenteService {
     
     constructor(private readonly userService: UsersService,
                 private readonly csrf: CsrfService,
-                private prisma: PrismaService,
                 private readonly enderecoService: EnderecoService,
-                private readonly estabelecimentoService: EstabelecimentoService) {}
+                private readonly estabelecimentoService: EstabelecimentoService,
+                private readonly galeriaService: GaleriaService) {}
 
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string) {
       await this.estabelecimentoService.criaEstabelecimento(data, userType).then((response) => {
@@ -53,5 +54,14 @@ export class GerenteService {
         }
 
         throw new HttpException('Token CSRF inválido', 403);
+    }
+
+    async cadastrarFotoGaleria(userId: number, fileName: string) {
+        const user = await this.userService.getUserById(userId);
+        if (!user || !user.id_estabelecimento) {
+            throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+        }
+
+        return await this.galeriaService.adicionaFotoGaleria(user.id_estabelecimento, fileName);
     }
 }

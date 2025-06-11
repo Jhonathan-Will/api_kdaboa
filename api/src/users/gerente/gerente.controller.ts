@@ -1,13 +1,19 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors } from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { HashService } from 'src/security/hash/hash.service';
 
 @Controller("gerente")
 export class GerenteController {
-    constructor(private readonly gerenteService: GerenteService) {}
+    constructor(private readonly gerenteService: GerenteService,
+                private readonly hashService: HashService) {}
 
     //rota de cadastrar estabelecimento 
     @UseGuards(RefreshGuard)
@@ -25,5 +31,55 @@ export class GerenteController {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
         
         this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Cadastra uma nova galeria de imagens' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+    schema: {
+        type: 'object',
+        properties: {
+        images: {
+            type: 'string',
+            format: 'binary',
+        },
+        },
+    },
+    })
+    @UseInterceptors(FileInterceptor('images', {
+        storage: diskStorage({
+            destination: join(__dirname,"..","..","images","gallery").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname,"..","..","images","gallery", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @Post("/gallery")
+    CadastrarGaleria(@Body() body: any, @Req() req: any) {
+
+        if (!req.file) {
+            throw new HttpException({
+                status: 400,
+                error: 'Nenhum arquivo enviado'
+            }, 400)
+        }
+
+        console.log(req.file)
+
+        return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
     }
 }

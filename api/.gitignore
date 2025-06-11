@@ -57,3 +57,11 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 #banco de dados
 /prisma/migrations
+
+# fotos adicionadas na pasta images
+src/images/gallery/*
+src/images/profile/*
+
+# Mantém o diretório, mas ignora os arquivos dentro dele
+!src/images/gallery/.gitkeep
+!src/images/profile/.gitkeep
