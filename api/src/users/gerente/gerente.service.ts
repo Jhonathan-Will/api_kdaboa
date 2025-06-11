@@ -35,6 +35,19 @@ export class GerenteService {
       })
     }
 
+    async alteraEstabelecimento(dados: any, userId: number) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento || user.tipo !== 'Gerente' || user.id_estabelecimento !== dados.id) {
+        throw new Error('Usuário não encontrado ou não possui permissão para alterar este estabelecimento');
+      }
+
+      const id = dados.id
+      delete dados.id;
+
+      return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
+    }
+
     async cadastrarEndereco(data: CriarEnderecoDTO, user: any, csrfToken: string){
         if(this.csrf.validateToken(csrfToken)) {
 

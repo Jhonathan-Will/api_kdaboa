@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put } from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
@@ -9,11 +9,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { HashService } from 'src/security/hash/hash.service';
+import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
+import { CsrfService } from 'src/security/csrf/csrf.service';
 
 @Controller("gerente")
 export class GerenteController {
     constructor(private readonly gerenteService: GerenteService,
-                private readonly hashService: HashService) {}
+                private readonly csrf: CsrfService) {}
 
     //rota de cadastrar estabelecimento 
     @UseGuards(RefreshGuard)
@@ -21,6 +23,23 @@ export class GerenteController {
     @Post("/establishment")
     CriarEstabelecimento(@Body() estabelecimento: CriarEstabelecimentoDTO,  @Req() req: any)  {
         return this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub, req.user.tipo);
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
+    @Put("/establishment")
+    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any) {
+        const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
+
+        if (!this.csrf.validateToken(csrfToken)){
+            console.log(this.csrf.validateToken(csrfToken))
+            throw new HttpException({
+                status: 403,
+                error: 'Token CSRF inválido'
+            }, 405);
+        }
+
+        this.gerenteService.alteraEstabelecimento(estabelecimento, req.user.sub)  
     }
 
     //rota para cadastrar endereço
