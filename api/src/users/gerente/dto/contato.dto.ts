@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional, IsString } from "class-validator";
 
 
-export class CriaContatoDTO {
+export class ContatoDTO {
 
     @ApiProperty({
         description: 'Telefone celular principal do contato',

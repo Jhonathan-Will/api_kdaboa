@@ -13,7 +13,7 @@ import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
 import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
-import { CriaContatoDTO } from './dto/criaContato.dto';
+import { ContatoDTO } from './dto/contato.dto';
 
 @Controller("gerente")
 export class GerenteController {
@@ -148,7 +148,7 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Cadastra maneira de contato' })
     @Post("/contact")
-    CadastraContato(@Body() contato: CriaContatoDTO, @Req() req: any) {
+    CadastraContato(@Body() contato: ContatoDTO, @Req() req: any) {
         if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             return this.gerenteService.cadastaContato(contato, req.user.sub)
         }else{
@@ -158,4 +158,19 @@ export class GerenteController {
             }, 405);
         }
     }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Altera contato do estabelecimento' })
+    @Put("/contact")
+    AlteraContato(@Body() contato: ContatoDTO, @Req() req: any) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            return this.gerenteService.alteraContato(contato, req.user.sub);
+        }else{
+            throw new HttpException({
+                status: 403,
+                error: 'Token CSRF inválido'
+            }, 405);
+        }
+    }
+
 }

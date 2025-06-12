@@ -25,4 +25,32 @@ export class ContatoService {
             throw new Error('Erro ao criar contato');
         })
     }
+
+    async encontraContatoPorEstabelecimento(id_estabelecimento: number) {
+        return await this.prisma.contato.findFirst({
+            where: {Estabelecimento: {id_estabelecimento: id_estabelecimento}},
+            include: {
+                Estabelecimento: true
+            }
+        }).then((response) => {
+            return response;
+        }).catch(error => {
+            console.log(error)
+            throw new Error('Erro ao encontrar contato');
+        })
+    }
+
+    async alteraContato(data: any, id: number) {
+        await this.prisma.contato.update({
+            where: {id_contato: id},
+            data: {
+                ...data
+            },
+        }).then((response) => {
+            return response;
+        }).catch(error => {
+            console.log(error)
+            throw new Error('Erro ao alterar contato');
+        })
+    }
 }

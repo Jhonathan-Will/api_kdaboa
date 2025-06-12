@@ -168,4 +168,26 @@ export class GerenteService {
 
       return await this.contatoService.criaContato(correctData, user.id_estabelecimento);
     }
+
+    //rota para alterar contato
+    async alteraContato(data: any, userId: number) {
+      const user = await this.userService.getUserById(userId);
+      if (!user || !user.id_estabelecimento) {
+          throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+
+      const contato = await this.contatoService.encontraContatoPorEstabelecimento(user.id_estabelecimento)
+
+      if (!contato) {
+          throw new HttpException('Contato não encontrado para este estabelecimento', 404);
+      }
+
+      const correctData = {
+        ...(data.tel_cel_1 && { tel_cel_1: data.tel_cel_1 }),
+        ...(data.tel_cel_2 && { tel_cel_2: data.tel_cel_2 }),
+        ...(data.email && { email: data.email }),
+      }
+
+      return await this.contatoService.alteraContato(correctData, contato.id_contato);
+    }
 }

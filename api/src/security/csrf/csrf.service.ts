@@ -14,18 +14,25 @@ export class CsrfService {
   }
 
   validateToken(token: string): boolean {
+    console.log('dentro do validate token', token)
     const [encodedData, sentHmac] = token.split('.');
+    console.log("encoded: ", encodedData, "sentHmac: ", sentHmac)
     const decodedData = Buffer.from(encodedData, 'base64').toString();
+    console.log("decodedData: ", decodedData)
     const expectedHmac = crypto
         .createHmac('sha256', process.env.SECRET || 'default_csrf_secret')
         .update(decodedData)
         .digest('hex');
-
+    console.log("expectedHmac: ", expectedHmac)
+    console.log(sentHmac !== expectedHmac)
     if (sentHmac !== expectedHmac) return false;
 
     const parsed = JSON.parse(decodedData);
+    console.log("parsed: ", parsed)
     const now = Date.now();
     const maxAgeMs = 12 * 60 * 1000;
+    console.log("now: ", now, "timestamp: ", parsed.timestamp, "maxAgeMs: ", maxAgeMs)
+    console.log(!parsed.timestamp || now - parsed.timestamp > maxAgeMs)
     if (!parsed.timestamp || now - parsed.timestamp > maxAgeMs) {
         return false;
     }
