@@ -10,6 +10,7 @@ import { GaleriaService } from "src/features/galeria.service";
 import { AlteraEnderecoDTO } from "./dto/alteraEndereco.dto";
 import * as fs from 'fs';
 import { join } from "path";
+import { ContatoService } from "src/features/contato.service";
 @Injectable()
 export class GerenteService {
     
@@ -17,7 +18,8 @@ export class GerenteService {
                 private readonly csrf: CsrfService,
                 private readonly enderecoService: EnderecoService,
                 private readonly estabelecimentoService: EstabelecimentoService,
-                private readonly galeriaService: GaleriaService) {}
+                private readonly galeriaService: GaleriaService,
+                private readonly contatoService: ContatoService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string) {
@@ -123,6 +125,7 @@ export class GerenteService {
         return await this.galeriaService.adicionaFotoGaleria(user.id_estabelecimento, fileName);
     }
 
+    //rota para deletar foto da galeria
     async deletaGaleria(id: number, userId: number) {
         const user = await this.userService.getUserById(userId);
 
@@ -148,5 +151,21 @@ export class GerenteService {
         }
 
         throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
+    }
+
+    // rota para criar contato
+    async cadastaContato(data: any, userId: number) {
+      const user = await this.userService.getUserById(userId);
+      if (!user || !user.id_estabelecimento) {
+          throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+
+      const correctData = {
+        ...(data.tel_cel_1 && { tel_cel_1: data.tel_cel_1 }),
+        ...(data.tel_cel_2 && { tel_cel_2: data.tel_cel_2 }),
+        ...(data.email && { email: data.email }),
+      }
+
+      return await this.contatoService.criaContato(correctData, user.id_estabelecimento);
     }
 }
