@@ -76,6 +76,23 @@ export class GerenteService {
 
     }
 
+    // Rota para buscar endereço
+    async buscaEndereco(userId: number) {
+      const user = await this.userService.getUserById(userId);
+
+      if(!user || !user.id_estabelecimento) {
+        throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+
+      const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
+
+      if(!endereco || endereco.length === 0) {
+        throw new HttpException('Nenhum endereço encontrado para este estabelecimento', 404);
+      }
+
+      return endereco;
+    }
+
     // Rota para alterar endereço
     async alteraEndereco(data: AlteraEnderecoDTO, userId: number){
       const user = await this.userService.getUserById(userId)

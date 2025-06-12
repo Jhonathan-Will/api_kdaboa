@@ -4,11 +4,9 @@ import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
 import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
-
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { HashService } from 'src/security/hash/hash.service';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
@@ -53,6 +51,20 @@ export class GerenteController {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
         
         this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Busca o endereço do usuário' })
+    @Get("/address")
+    BuscaEndereco(@Req() req: any) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            return this.gerenteService.buscaEndereco(req.user.sub);
+        }else{
+            throw new HttpException({
+                status: 403,
+                error: 'Token CSRF inválido'
+            }, 405);
+        }
     }
 
     //rota para alterar endereço
