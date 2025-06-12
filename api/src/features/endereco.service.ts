@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AlteraEnderecoDTO } from "src/users/gerente/dto/alteraEndereco.dto";
 import { CriarEnderecoDTO } from "src/users/gerente/dto/criarEndreço.dto";
 
 @Injectable()
@@ -41,5 +42,22 @@ export class EnderecoService {
                 Estabelecimento_Endereco: true
             }
         })
+    }
+
+    async alteraEndereco(data: AlteraEnderecoDTO) {
+        const updateData: any = {
+            ...(data.logradouro && { logradouro: data.logradouro }),
+            ...(data.numero && { numero: data.numero }),
+            ...(data.bairro && { bairro: data.bairro }),
+            ...(data.cidade && { cidade: data.cidade }),
+            ...(data.estado && { estado: data.estado }),
+            ...(data.cep && { cep: data.cep }),
+                complemento: data.complemento 
+        };
+
+        return this.prisma.endereco.update({
+            where: { id_endereco: data.id },
+            data: updateData
+        });
     }
 }

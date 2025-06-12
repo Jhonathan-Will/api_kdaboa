@@ -7,6 +7,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
+import { AlteraEnderecoDTO } from "./dto/alteraEndereco.dto";
 
 @Injectable()
 export class GerenteService {
@@ -17,6 +18,7 @@ export class GerenteService {
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService) {}
 
+    // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string) {
       await this.estabelecimentoService.criaEstabelecimento(data, userType).then((response) => {
 
@@ -35,6 +37,8 @@ export class GerenteService {
       })
     }
 
+
+    // Rota para alterar estabelecimento
     async alteraEstabelecimento(dados: any, userId: number) {
       const user = await this.userService.getUserById(userId)
 
@@ -48,27 +52,50 @@ export class GerenteService {
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
 
+    // Rota para cadastrar endereço
     async cadastrarEndereco(data: CriarEnderecoDTO, user: any, csrfToken: string){
+      console.log(csrfToken)
         if(this.csrf.validateToken(csrfToken)) {
 
-            const usuario = await this.userService.getUserByEmail(user.email).then(async (user) => {
+            await this.userService.getUserByEmail(user.email).then(async (user) => {
                 if(!user?.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 400);
                 
                 const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
-                console.log(endereco)
 
                 endereco.forEach(end => {
                     if(end == data) throw new HttpException('Endereço já cadastrado para este estabelecimento', 400);
                 });
                 
-            return  await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento , usuario.tipo);
+            return  await this.enderecoService.cadastrarEndereco(data, user.id_estabelecimento , user.tipo);
           })
 
+        }else{
+          throw new HttpException('Token CSRF inválido', 403);
         }
 
-        throw new HttpException('Token CSRF inválido', 403);
     }
 
+    // Rota para alterar endereço
+    async alteraEndereco(data: AlteraEnderecoDTO, userId: number){
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) {
+        throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+
+      const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
+
+      endereco.forEach( async end => {
+        if(end.id_endereco === data.id) {
+          return await this.enderecoService.alteraEndereco(data)
+        }
+      })
+
+      throw new HttpException('Endereço não encontrado para este estabelecimento', 404);
+
+    }
+
+    // Rota para cadastrar foto na galeria
     async cadastrarFotoGaleria(userId: number, fileName: string) {
         const user = await this.userService.getUserById(userId);
         if (!user || !user.id_estabelecimento) {

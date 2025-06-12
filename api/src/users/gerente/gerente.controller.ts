@@ -11,6 +11,7 @@ import { extname, join } from 'path';
 import { HashService } from 'src/security/hash/hash.service';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
+import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
 
 @Controller("gerente")
 export class GerenteController {
@@ -50,6 +51,16 @@ export class GerenteController {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
         
         this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
+    }
+
+    //rota para alterar endereço
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Altera o endereço do usuário' })
+    @Put("/address")
+    AlteraEndereco(@Body() endereco: AlteraEnderecoDTO, @Req() req: any) {
+        if(this.csrf.validateToken(req.headers['x-csrf-token'] || req.cookies['x-csrf-token'])) {
+            return this.gerenteService.alteraEndereco(endereco, req.user.sub);
+        }
     }
 
     @UseGuards(RefreshGuard)
