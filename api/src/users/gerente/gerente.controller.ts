@@ -129,4 +129,18 @@ export class GerenteController {
 
         return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
     }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Busca as imagens da galeria do usuário' })
+    @Delete("/gallery")
+    DeletaGaleria(@Body() id: DeletaEnderecoDTO, @Req() req: any) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            return this.gerenteService.deletaGaleria(id.id, req.user.sub);
+        }else{
+            throw new HttpException({
+            status: 403,
+            error: 'Token CSRF inválido'
+            }, 405);
+        }
+    }
 }

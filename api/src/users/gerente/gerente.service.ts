@@ -8,7 +8,8 @@ import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
 import { AlteraEnderecoDTO } from "./dto/alteraEndereco.dto";
-
+import * as fs from 'fs';
+import { join } from "path";
 @Injectable()
 export class GerenteService {
     
@@ -36,7 +37,6 @@ export class GerenteService {
         throw new HttpException('Erro ao criar estabelecimento', 500);
       })
     }
-
 
     // Rota para alterar estabelecimento
     async alteraEstabelecimento(dados: any, userId: number) {
@@ -121,5 +121,32 @@ export class GerenteService {
         }
 
         return await this.galeriaService.adicionaFotoGaleria(user.id_estabelecimento, fileName);
+    }
+
+    async deletaGaleria(id: number, userId: number) {
+        const user = await this.userService.getUserById(userId);
+
+        if (!user || !user.id_estabelecimento) {
+            throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+        }
+
+        const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
+
+        for (const item of galeria) {
+            if (item.id_gal === id) {
+
+              const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
+              
+              try {
+                fs.promises.unlink(path)
+              } catch (erro) {
+                console.error("Erro ao deletar arquivo:", erro);
+                throw new HttpException('Erro ao deletar arquivo', 500);
+              }
+              return await this.galeriaService.deletaGaleria(item.id_gal);
+            }
+        }
+
+        throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
     }
 }

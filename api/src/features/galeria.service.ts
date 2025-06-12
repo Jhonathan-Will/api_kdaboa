@@ -21,4 +21,20 @@ export class GaleriaService {
         }
         );
     }
+
+    async encontraFotoPorEstabelecimento(id: number){
+        return await this.prisma.galeria.findMany({
+            where: {
+                id_estabelecimento: id
+            }
+        })
+    }
+
+    async deletaGaleria(id:number) {
+        return await this.prisma.galeria.delete({
+            where:{
+                id_gal: id
+            }
+        })
+    }
 }
