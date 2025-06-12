@@ -60,4 +60,10 @@ export class EnderecoService {
             data: updateData
         });
     }
+
+    async deletaEndereco(id: number) {
+        return this.prisma.endereco.delete({
+            where: { id_endereco: id }
+        });
+    }
 }

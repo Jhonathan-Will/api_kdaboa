@@ -54,7 +54,6 @@ export class GerenteService {
 
     // Rota para cadastrar endereço
     async cadastrarEndereco(data: CriarEnderecoDTO, user: any, csrfToken: string){
-      console.log(csrfToken)
         if(this.csrf.validateToken(csrfToken)) {
 
             await this.userService.getUserByEmail(user.email).then(async (user) => {
@@ -93,6 +92,25 @@ export class GerenteService {
 
       throw new HttpException('Endereço não encontrado para este estabelecimento', 404);
 
+    }
+
+    // Rota para deletar endereço
+    async deletaEndereco(id: number, userId: number) {
+        const user = await this.userService.getUserById(userId);
+
+        if (!user || !user.id_estabelecimento) {
+            throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+        }
+
+        const enderecos = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
+
+        for (const end of enderecos) {
+            if (end.id_endereco === id) {
+                return await this.enderecoService.deletaEndereco(id);
+            }
+        }
+
+        throw new HttpException('Endereço não encontrado para este estabelecimento', 404);
     }
 
     // Rota para cadastrar foto na galeria

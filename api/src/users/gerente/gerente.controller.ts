@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete } from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
@@ -12,6 +12,7 @@ import { HashService } from 'src/security/hash/hash.service';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
+import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 
 @Controller("gerente")
 export class GerenteController {
@@ -62,6 +63,22 @@ export class GerenteController {
             return this.gerenteService.alteraEndereco(endereco, req.user.sub);
         }
     }
+
+    //rota para deletar endereço
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Deleta o endereço do usuário' })
+    @Delete("/address")
+    DeletaEndereco(@Body() id: DeletaEnderecoDTO, @Req() req: any) {
+
+        if(this.csrf.validateToken(req.headers['x-csrf-token'] || req.cookies['x-csrf-token'])) {
+            return this.gerenteService.deletaEndereco(id.id, req.user.sub);
+        } else {
+            throw new HttpException({
+                status: 403,
+                error: 'Token CSRF inválido'
+            }, 405);
+        }
+    }   
 
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Cadastra uma nova galeria de imagens' })

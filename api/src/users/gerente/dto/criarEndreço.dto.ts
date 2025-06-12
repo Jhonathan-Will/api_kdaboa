@@ -53,7 +53,7 @@ export class CriarEnderecoDTO {
 
     @ApiProperty({
         description: 'CEP do endereço',
-        example: '12345-678',
+        example: '12345678',
     })
     @IsString({ message: 'CEP deve ser uma string' })
     @IsNotEmpty({ message: 'CEP é obrigatório' })
