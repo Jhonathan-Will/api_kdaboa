@@ -54,12 +54,16 @@ model Estabelecimento {
 }
 
 model Estabelecimento_Endereco {
-  id                        Int                         @id @default(autoincrement())
-  id_endereco               Int                         @unique(map: "id_endereco")
-  id_estabelecimento        Int                         @unique(map: "id_estabelecimento")
-  Estabelecimento           Estabelecimento?            @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: NoAction,  map: "fk_estabelecimento")
-  Endereco                  Endereco?                   @relation(fields: [id_endereco], references: [id_endereco], onDelete: NoAction, map: "fk_endereco")
+  id_estabelecimento Int
+  id_endereco        Int
+
+  Estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "fk_estabelecimento")
+  Endereco           Endereco        @relation(fields: [id_endereco], references: [id_endereco], onDelete: Cascade, map: "fk_endereco")
+
+  @@id([id_estabelecimento, id_endereco])
+  @@index([id_endereco], map: "idx_endereco")
 }
+
 
 model Estabelecimento_Categoria {
   id_estabelecimento Int
