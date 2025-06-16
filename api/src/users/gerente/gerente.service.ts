@@ -11,6 +11,8 @@ import { AlteraEnderecoDTO } from "./dto/alteraEndereco.dto";
 import * as fs from 'fs';
 import { join } from "path";
 import { ContatoService } from "src/features/contato.service";
+import { CriarEventoDTO } from "./dto/criarEvento.dto";
+import { EventoService } from "src/features/evento.service";
 @Injectable()
 export class GerenteService {
     
@@ -19,7 +21,8 @@ export class GerenteService {
                 private readonly enderecoService: EnderecoService,
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService,
-                private readonly contatoService: ContatoService) {}
+                private readonly contatoService: ContatoService,
+                private readonly eventoService: EventoService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string) {
@@ -206,5 +209,20 @@ export class GerenteService {
       }
 
       return await this.contatoService.alteraContato(correctData, contato.id_contato);
+    }
+
+    //rota para cadastrar evento
+    async cadastraEvento(data: CriarEventoDTO, userId: number, file: number) {
+      const user = await this.userService.getUserById(userId);
+
+      if (!user || !user.id_estabelecimento) {
+        throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+
+      const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
+      console.log(estabelecimento)
+      if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
+
+      return this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , String(file))
     }
 }

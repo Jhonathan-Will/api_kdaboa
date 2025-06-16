@@ -57,4 +57,18 @@ export class EstabelecimentoService {
             where: { id_estabelecimento }
         });
     }
+
+    async buscaEstabelecimento(id: number) {
+        return this.prisma.estabelecimento.findUnique({
+            where: { id_estabelecimento: id },
+            include: {
+                Usuario: true,
+                Estabelecimento_Categoria: true,
+                Contato: true,
+                Estabelecimento_Endereco: true,
+                Evento: true,
+                Galeria: true
+            }
+        })
+    }
 }
