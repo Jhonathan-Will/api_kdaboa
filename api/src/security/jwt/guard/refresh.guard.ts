@@ -29,7 +29,6 @@ export class RefreshGuard extends AuthGuard('jwt') {
 
     try {
       const payload = this.refreshService.verifyRefreshToken(refreshToken);
-      console.log("dentro do refresh guard: ",payload)
       const newAccessToken = this.refreshService.refresh(payload);
 
       const csrfToken = this.csrf.generateToken({email: payload.email, sub: payload.sub, status: payload.status});
@@ -37,6 +36,8 @@ export class RefreshGuard extends AuthGuard('jwt') {
       res.cookie('token', newAccessToken, { httpOnly: true, secure: true, sameSite: 'strict', path: '/' });
       res.cookie('x-csrf-token', csrfToken, { httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
 
+      req.cookies['x-csrf-token'] = csrfToken;
+      
       return payload as TUser;
     } catch (e) {
       console.log(e)

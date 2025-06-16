@@ -25,7 +25,8 @@ export class CsrfService {
 
     const parsed = JSON.parse(decodedData);
     const now = Date.now();
-    const maxAgeMs = 10 * 60 * 1000;
+    const maxAgeMs = 12 * 60 * 1000;
+
     if (!parsed.timestamp || now - parsed.timestamp > maxAgeMs) {
         return false;
     }

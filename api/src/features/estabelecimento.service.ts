@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AlteraEstabelecimentoDTO } from "src/users/gerente/dto/alteraEstabelecimento.dto";
 import { CriarEstabelecimentoDTO } from "src/users/gerente/dto/criarEstabelecimento.dto";
 
 @Injectable()
@@ -30,9 +31,44 @@ export class EstabelecimentoService {
         }
     }
 
+    async alteraEstabelecimento(id: number, data: AlteraEstabelecimentoDTO) {
+        const updateData: any = {
+            ...(data.nome && { nome: data.nome }),
+            ...(data.descricao &&  {descricao: data.descricao}),
+            ...(data.categoria && {Estabelecimento_Categoria: {
+                deleteMany: {},
+                createMany: {
+                    data: data.categoria.map((categoriaId: number) => ({ id_categoria: categoriaId }))
+                }
+            }}) 
+        };
+
+        return this.prisma.estabelecimento.update({
+            where: { id_estabelecimento: id },
+            data: updateData,
+            include: {
+                Estabelecimento_Categoria: true
+            }
+        });
+    }
+
     async deletaEstabelecimento(id_estabelecimento: number) {
         return this.prisma.estabelecimento.delete({
             where: { id_estabelecimento }
         });
+    }
+
+    async buscaEstabelecimento(id: number) {
+        return this.prisma.estabelecimento.findUnique({
+            where: { id_estabelecimento: id },
+            include: {
+                Usuario: true,
+                Estabelecimento_Categoria: true,
+                Contato: true,
+                Estabelecimento_Endereco: true,
+                Evento: true,
+                Galeria: true
+            }
+        })
     }
 }
