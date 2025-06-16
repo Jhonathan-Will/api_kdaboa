@@ -6,12 +6,11 @@ import { CsrfModule } from 'src/security/csrf/csrf.module';
 import { UsersModule } from '../users.module';
 import { UsersService } from '../users.service';
 import { FeatureModule } from 'src/features/features.module';
-import { HashService } from 'src/security/hash/hash.service';
 
 @Module({
   imports: [CsrfModule, UsersModule, FeatureModule],
   controllers: [GerenteController],
-  providers: [PrismaService, GerenteService, UsersService, HashService],
+  providers: [PrismaService, GerenteService, UsersService],
   exports: []
 })
 export class GerenteModule {}
