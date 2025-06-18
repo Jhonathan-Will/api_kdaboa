@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus} from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
@@ -13,7 +13,7 @@ import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
 import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
-import { MulterField } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { Response } from 'express';
 
 @Controller("gerente")
 export class GerenteController {
@@ -26,8 +26,19 @@ export class GerenteController {
     @Post("/establishment")
     CriarEstabelecimento(@Body() estabelecimento: CriarEstabelecimentoDTO,  @Req() req: any)  {
         return this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub, req.user.tipo);
+    }   
+
+    //rota pra pegar estabelecimento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Busca estbalecimento pelo token do usuário'})
+    @Get("/establishment")
+    async PegarEstabelecimento(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json( await this.gerenteService.buscaEstabelecimentoPorUserId(req.user.sub))
+        }
     }
 
+    //rota para alterar estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
     @Put("/establishment")
@@ -35,7 +46,6 @@ export class GerenteController {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
 
         if (!this.csrf.validateToken(csrfToken)){
-            console.log(this.csrf.validateToken(csrfToken))
             throw new HttpException({
                 status: 403,
                 error: 'Token CSRF inválido'
@@ -55,6 +65,7 @@ export class GerenteController {
         this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
     }
 
+    //rota para buscar endereço
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca o endereço do usuário' })
     @Get("/address")
@@ -95,6 +106,7 @@ export class GerenteController {
         }
     }   
 
+    //rota para cadastrar foto na galeria
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Cadastra uma nova galeria de imagens' })
     @ApiConsumes('multipart/form-data')
@@ -143,6 +155,7 @@ export class GerenteController {
         return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
     }
 
+    //rota para deletar foto da galeria
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca as imagens da galeria do usuário' })
     @Delete("/gallery")
@@ -157,6 +170,7 @@ export class GerenteController {
         }
     }
 
+    //rota para cadastrar contato para estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Cadastra maneira de contato' })
     @Post("/contact")
@@ -171,6 +185,7 @@ export class GerenteController {
         }
     }
 
+    //rota para alterar contato do estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera contato do estabelecimento' })
     @Put("/contact")
@@ -185,6 +200,7 @@ export class GerenteController {
         }
     }
 
+    //rota para cadastrar evento para o estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({summary: 'Cadastra um evento'})
     @ApiBody({
