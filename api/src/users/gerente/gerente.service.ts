@@ -43,6 +43,16 @@ export class GerenteService {
       })
     }
 
+    //Rota para buscar estabelecimento pelo token
+    async buscaEstabelecimentoPorUserId(userId: number) {
+
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || user.id_estabelecimento == undefined || user.id_estabelecimento == null) throw new HttpException("usuário não possui estabelecimento vinculado a ele", 404)
+      
+      return await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+    }
+
     // Rota para alterar estabelecimento
     async alteraEstabelecimento(dados: any, userId: number) {
       const user = await this.userService.getUserById(userId)
