@@ -62,8 +62,23 @@ export class EstabelecimentoService {
         return this.prisma.estabelecimento.findUnique({
             where: { id_estabelecimento: id },
             include: {
-                Usuario: true,
-                Estabelecimento_Categoria: true,
+                Usuario: {
+                    select: {
+                        id_usuario: true,
+                        nome_usuario: true,
+                        id_estabelecimento: true
+                    }
+                },
+                Estabelecimento_Categoria: {
+                    select: {
+                        id_categoria: true,
+                        Categoria: {
+                            select: {
+                                nome_categoria: true
+                            }
+                        }
+                    }
+                },
                 Contato: true,
                 Estabelecimento_Endereco: true,
                 Evento: true,
