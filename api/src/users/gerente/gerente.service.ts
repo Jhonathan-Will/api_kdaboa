@@ -25,22 +25,23 @@ export class GerenteService {
                 private readonly eventoService: EventoService) {}
 
     // Rota para criar estabelecimento
-    async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string) {
-      await this.estabelecimentoService.criaEstabelecimento(data, userType).then((response) => {
+    async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
+      try {
+        const response = await this.estabelecimentoService.criaEstabelecimento(data, userType);
 
-        this.userService.updateUser(id, {id_estabelecimento: response.id_estabelecimento}).catch(error => {
-            console.log(error)
-            this.estabelecimentoService.deletaEstabelecimento(response.id_estabelecimento)
+        try {
+          await this.userService.updateUser(id, { id_estabelecimento: response.id_estabelecimento });
+        } catch (error) {
+          console.log(error);
+          await this.estabelecimentoService.deletaEstabelecimento(response.id_estabelecimento);
+          throw new HttpException('Erro ao atualizar usuário com o estabelecimento', 500);
+        }
 
-            throw new HttpException('Erro ao atualizar usuário com o estabelecimento', 500);
-        })
-
-        return response;
-
-      }).catch(error => {
-        console.log(error)
+        return { id_estabelecimento: response.id_estabelecimento };
+      } catch (error) {
+        console.log(error);
         throw new HttpException('Erro ao criar estabelecimento', 500);
-      })
+      }
     }
 
     //Rota para buscar estabelecimento pelo token
