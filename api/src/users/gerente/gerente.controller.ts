@@ -24,8 +24,10 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Cadastra o estabelecimento do usuário'})
     @Post("/establishment")
-    CriarEstabelecimento(@Body() estabelecimento: CriarEstabelecimentoDTO,  @Req() req: any)  {
-        return this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub, req.user.tipo);
+    async CriarEstabelecimento(@Body() estabelecimento: CriarEstabelecimentoDTO,  @Req() req: any, @Res() res: Response)  {
+        await this.gerenteService.criarEstabelecimento(estabelecimento, req.user.sub, req.user.tipo).then((response) => {
+            res.status(HttpStatus.CREATED).json(response)
+        });
     }   
 
     //rota pra pegar estabelecimento
