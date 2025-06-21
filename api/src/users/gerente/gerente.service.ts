@@ -13,6 +13,7 @@ import { join } from "path";
 import { ContatoService } from "src/features/contato.service";
 import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
+import { isNumber } from "class-validator";
 @Injectable()
 export class GerenteService {
     
@@ -69,25 +70,29 @@ export class GerenteService {
     }
 
     // Rota para cadastrar endereço
-    async cadastrarEndereco(data: CriarEnderecoDTO, user: any, csrfToken: string){
-        if(this.csrf.validateToken(csrfToken)) {
+    async cadastrarEndereco(data: CriarEnderecoDTO, user: any): Promise<{ id_endereco: number }> {
+        const usuario = await this.userService.getUserByEmail(user.email);
 
-            await this.userService.getUserByEmail(user.email).then(async (user) => {
-                if(!user?.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 400);
-                
-                const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
-
-                endereco.forEach(end => {
-                    if(end == data) throw new HttpException('Endereço já cadastrado para este estabelecimento', 400);
-                });
-                
-            return  await this.enderecoService.cadastrarEndereco(data, user.id_estabelecimento , user.tipo);
-          })
-
-        }else{
-          throw new HttpException('Token CSRF inválido', 403);
+        if (!usuario?.id_estabelecimento) {
+            throw new HttpException('Usuário não possui estabelecimento vinculado', 400);
         }
 
+        const enderecos = await this.enderecoService.encontrarEnderecoPorEstabelecimento(usuario.id_estabelecimento);
+
+        const enderecoExistente = enderecos.find(end => JSON.stringify(end) === JSON.stringify(data));
+        if (enderecoExistente) {
+            throw new HttpException('Endereço já cadastrado para este estabelecimento', 400);
+        }
+
+        try {
+            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo);
+            console.log(response)
+            if(isNumber(response?.id_endereco )) return { id_endereco: response?.id_endereco };
+        } catch (error) {
+            throw new HttpException('Erro ao cadastrar endereço', 500);
+        }
+
+        throw new HttpException('Erro ao cadastrar endereço', 500);
     }
 
     // Rota para buscar endereço
@@ -117,11 +122,11 @@ export class GerenteService {
 
       const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
 
-      endereco.forEach( async end => {
-        if(end.id_endereco === data.id) {
-          return await this.enderecoService.alteraEndereco(data)
+      for (const end of endereco) {
+        if (end.id_endereco === data.id) {
+          return await this.enderecoService.alteraEndereco(data);
         }
-      })
+      }
 
       throw new HttpException('Endereço não encontrado para este estabelecimento', 404);
 

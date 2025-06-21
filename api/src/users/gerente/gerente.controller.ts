@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus} from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query} from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
@@ -61,10 +61,14 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({summary: 'Cadastra um novo endereço'})
     @Post("/address")
-    CadastrarEndreco(@Body() endereco: CriarEnderecoDTO, @Req() req: any) {
-        const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
+    async CadastrarEndreco(@Body() endereco: CriarEnderecoDTO, @Req() req: any, @Res() res: Response) {
+       if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+          await this.gerenteService.cadastrarEndereco(endereco, req.user).then(response => {
+            console.log(response)
+            res.status(HttpStatus.CREATED).json(response)
+          });
+       }
         
-        this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
     }
 
     //rota para buscar endereço
@@ -96,10 +100,10 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Deleta o endereço do usuário' })
     @Delete("/address")
-    DeletaEndereco(@Body() id: DeletaEnderecoDTO, @Req() req: any) {
+    DeletaEndereco(@Query('id') id: string, @Req() req: any) {
 
         if(this.csrf.validateToken(req.headers['x-csrf-token'] || req.cookies['x-csrf-token'])) {
-            return this.gerenteService.deletaEndereco(id.id, req.user.sub);
+            return this.gerenteService.deletaEndereco(Number(id), req.user.sub);
         } else {
             throw new HttpException({
                 status: 403,
