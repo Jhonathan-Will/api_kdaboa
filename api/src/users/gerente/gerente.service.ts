@@ -14,6 +14,7 @@ import { ContatoService } from "src/features/contato.service";
 import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
+import { EventoDTO } from "./dto/evento.dto";
 @Injectable()
 export class GerenteService {
     
@@ -228,7 +229,7 @@ export class GerenteService {
     }
 
     //rota para cadastrar evento
-    async cadastraEvento(data: CriarEventoDTO, userId: number, file: number) {
+    async cadastraEvento(data: CriarEventoDTO, userId: number, file: number): Promise<EventoDTO>  {
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {
@@ -236,9 +237,20 @@ export class GerenteService {
       }
 
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
-      console.log(estabelecimento)
+
       if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
 
-      return this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , String(file))
+      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , String(file))
+     
+    }
+
+    //rota para buscar eventos por estabelecimento
+    async buscaEventoPorEstabelecimento(userId: number): Promise<EventoDTO[]> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
+
+      return await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+
     }
 }

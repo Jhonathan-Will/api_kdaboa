@@ -13,7 +13,7 @@ import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
 import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Controller("gerente")
 export class GerenteController {
@@ -304,6 +304,16 @@ export class GerenteController {
                 status: 403,
                 error: 'Token CSRF inválido'
             }, 405); 
+        }
+    }
+
+    //rota para pegar evento para o estbalecimento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Busca todos os eventos para o estabelecimento'})
+    @Get('/event')
+    async BuscaEstabelecimento(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoPorEstabelecimento(req.user.sub))
         }
     }
 

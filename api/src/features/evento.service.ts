@@ -30,4 +30,13 @@ export class EventoService {
             }
         })
     }
+
+    async buscaPorEstabelecimento(id_est: number) {
+        return await this.prisma.evento.findMany({
+            where: {id_estabelecimento: id_est},
+            include: {
+                Evento_Categoria: true
+            }
+        })
+    }
 }
