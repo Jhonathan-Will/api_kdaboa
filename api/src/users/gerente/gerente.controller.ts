@@ -161,6 +161,26 @@ export class GerenteController {
         return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
     }
 
+    //rota para buscar galeria pelo token do usuario
+    @ApiOperation({summary: 'Busca por todas as fotos da galeria pelo token'})
+    @UseGuards(RefreshGuard)
+    @Get('/gallery')
+    async BuscaTodasFotosDaGaleria(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaGaleiraPorEstabelecimento(req.user.sub))
+        }
+    }
+
+    //rota para buscar uma foto da galeira
+    @ApiOperation({summary: 'Busca por uma foto da galeira'})
+    @UseGuards(RefreshGuard)
+    @Get('/galerry')
+    async BuscaFoto(@Query('name') name: string, @Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).sendFile(await this.gerenteService.buscaFotoGaleria(req.user.sub, name))
+        }
+    }
+
     //rota para deletar foto da galeria
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca as imagens da galeria do usuário' })

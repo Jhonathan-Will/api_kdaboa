@@ -162,6 +162,31 @@ export class GerenteService {
         return await this.galeriaService.adicionaFotoGaleria(user.id_estabelecimento, fileName);
     }
 
+    //rota pra buscar todas as fotos de um estabelecimento
+    async buscaGaleiraPorEstabelecimento(userId: number): Promise<Array<string>> {
+      const user = await this.userService.getUserById(userId)
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui Estbalecimento vinculado a ele', 404)
+
+      const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
+      const urls = imagens.map(image => `http://localhost:3000/gerente/gallery/${image.foto}`);
+      console.log(urls)
+
+      return urls
+    }
+
+    //rota para buscar foto da galeria
+    async buscaFotoGaleria(userId: number, name: string): Promise<string> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimetno vinculado', 404)
+      
+      const path = join(__dirname,"..","..","images","gallery", name).replace("dist", "src");
+      
+      if(!fs.existsSync(path)) throw new HttpException('Imagem não encontrada', 404)
+      
+      return path
+    }
+
     //rota para deletar foto da galeria
     async deletaGaleria(id: number, userId: number) {
         const user = await this.userService.getUserById(userId);
