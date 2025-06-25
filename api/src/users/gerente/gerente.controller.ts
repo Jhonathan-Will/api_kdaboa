@@ -323,11 +323,7 @@ export class GerenteController {
     CadastraEvento(@Body() evento: CriarEventoDTO , @Req() req: any){
         if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
 
-            if(!req.file) throw new HttpException({ status: 402, error: 'imagem é obrigatoria'}, 402) 
-
-            this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename).then((file) => {
-                this.gerenteService.cadastraEvento(evento, req.user.sub, req.file.fileName)
-            })
+                this.gerenteService.cadastraEvento(evento, req.user.sub, req.file.filename)
 
         }else{
             throw new HttpException({

@@ -263,7 +263,8 @@ export class GerenteService {
     }
 
     //rota para cadastrar evento
-    async cadastraEvento(data: CriarEventoDTO, userId: number, file: number): Promise<EventoDTO>  {
+    async cadastraEvento(data: CriarEventoDTO, userId: number, file: string): Promise<EventoDTO>  {
+      console.log(file)
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {
@@ -273,8 +274,7 @@ export class GerenteService {
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
 
       if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
-
-      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , String(file))
+      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , file)
      
     }
 
