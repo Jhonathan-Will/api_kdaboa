@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus} from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query} from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
@@ -13,7 +13,7 @@ import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
 import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Controller("gerente")
 export class GerenteController {
@@ -61,10 +61,14 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({summary: 'Cadastra um novo endereço'})
     @Post("/address")
-    CadastrarEndreco(@Body() endereco: CriarEnderecoDTO, @Req() req: any) {
-        const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token'];
+    async CadastrarEndreco(@Body() endereco: CriarEnderecoDTO, @Req() req: any, @Res() res: Response) {
+       if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+          await this.gerenteService.cadastrarEndereco(endereco, req.user).then(response => {
+            console.log(response)
+            res.status(HttpStatus.CREATED).json(response)
+          });
+       }
         
-        this.gerenteService.cadastrarEndereco(endereco, req.user, csrfToken)
     }
 
     //rota para buscar endereço
@@ -96,10 +100,10 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Deleta o endereço do usuário' })
     @Delete("/address")
-    DeletaEndereco(@Body() id: DeletaEnderecoDTO, @Req() req: any) {
+    DeletaEndereco(@Query('id') id: string, @Req() req: any) {
 
         if(this.csrf.validateToken(req.headers['x-csrf-token'] || req.cookies['x-csrf-token'])) {
-            return this.gerenteService.deletaEndereco(id.id, req.user.sub);
+            return this.gerenteService.deletaEndereco(Number(id), req.user.sub);
         } else {
             throw new HttpException({
                 status: 403,
@@ -157,6 +161,26 @@ export class GerenteController {
         return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
     }
 
+    //rota para buscar galeria pelo token do usuario
+    @ApiOperation({summary: 'Busca por todas as fotos da galeria pelo token'})
+    @UseGuards(RefreshGuard)
+    @Get('/gallery')
+    async BuscaTodasFotosDaGaleria(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaGaleiraPorEstabelecimento(req.user.sub))
+        }
+    }
+
+    //rota para buscar uma foto da galeira
+    @ApiOperation({summary: 'Busca por uma foto da galeira'})
+    @UseGuards(RefreshGuard)
+    @Get('/galerry')
+    async BuscaFoto(@Query('name') name: string, @Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).sendFile(await this.gerenteService.buscaFotoGaleria(req.user.sub, name))
+        }
+    }
+
     //rota para deletar foto da galeria
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca as imagens da galeria do usuário' })
@@ -184,6 +208,16 @@ export class GerenteController {
                 status: 403,
                 error: 'Token CSRF inválido'
             }, 405);
+        }
+    }
+
+    //rota para buscar estabelecimento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'busca pelos contatos do estabelecimento'})
+    @Get('/contact')
+    async BuscaContato(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaContato(req.user.sub))
         }
     }
 
@@ -289,17 +323,23 @@ export class GerenteController {
     CadastraEvento(@Body() evento: CriarEventoDTO , @Req() req: any){
         if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
 
-            if(!req.file) throw new HttpException({ status: 402, error: 'imagem é obrigatoria'}, 402) 
-
-            this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename).then((file) => {
-                this.gerenteService.cadastraEvento(evento, req.user.sub, req.file.fileName)
-            })
+                this.gerenteService.cadastraEvento(evento, req.user.sub, req.file.filename)
 
         }else{
             throw new HttpException({
                 status: 403,
                 error: 'Token CSRF inválido'
             }, 405); 
+        }
+    }
+
+    //rota para pegar evento para o estbalecimento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Busca todos os eventos para o estabelecimento'})
+    @Get('/event')
+    async BuscaEstabelecimento(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoPorEstabelecimento(req.user.sub))
         }
     }
 
