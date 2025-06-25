@@ -13,6 +13,8 @@ import { join } from "path";
 import { ContatoService } from "src/features/contato.service";
 import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
+import { isNumber } from "class-validator";
+import { EventoDTO } from "./dto/evento.dto";
 @Injectable()
 export class GerenteService {
     
@@ -69,25 +71,29 @@ export class GerenteService {
     }
 
     // Rota para cadastrar endereço
-    async cadastrarEndereco(data: CriarEnderecoDTO, user: any, csrfToken: string){
-        if(this.csrf.validateToken(csrfToken)) {
+    async cadastrarEndereco(data: CriarEnderecoDTO, user: any): Promise<{ id_endereco: number }> {
+        const usuario = await this.userService.getUserByEmail(user.email);
 
-            await this.userService.getUserByEmail(user.email).then(async (user) => {
-                if(!user?.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 400);
-                
-                const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
-
-                endereco.forEach(end => {
-                    if(end == data) throw new HttpException('Endereço já cadastrado para este estabelecimento', 400);
-                });
-                
-            return  await this.enderecoService.cadastrarEndereco(data, user.id_estabelecimento , user.tipo);
-          })
-
-        }else{
-          throw new HttpException('Token CSRF inválido', 403);
+        if (!usuario?.id_estabelecimento) {
+            throw new HttpException('Usuário não possui estabelecimento vinculado', 400);
         }
 
+        const enderecos = await this.enderecoService.encontrarEnderecoPorEstabelecimento(usuario.id_estabelecimento);
+
+        const enderecoExistente = enderecos.find(end => JSON.stringify(end) === JSON.stringify(data));
+        if (enderecoExistente) {
+            throw new HttpException('Endereço já cadastrado para este estabelecimento', 400);
+        }
+
+        try {
+            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo);
+            console.log(response)
+            if(isNumber(response?.id_endereco )) return { id_endereco: response?.id_endereco };
+        } catch (error) {
+            throw new HttpException('Erro ao cadastrar endereço', 500);
+        }
+
+        throw new HttpException('Erro ao cadastrar endereço', 500);
     }
 
     // Rota para buscar endereço
@@ -117,11 +123,11 @@ export class GerenteService {
 
       const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
 
-      endereco.forEach( async end => {
-        if(end.id_endereco === data.id) {
-          return await this.enderecoService.alteraEndereco(data)
+      for (const end of endereco) {
+        if (end.id_endereco === data.id) {
+          return await this.enderecoService.alteraEndereco(data);
         }
-      })
+      }
 
       throw new HttpException('Endereço não encontrado para este estabelecimento', 404);
 
@@ -154,6 +160,31 @@ export class GerenteService {
         }
 
         return await this.galeriaService.adicionaFotoGaleria(user.id_estabelecimento, fileName);
+    }
+
+    //rota pra buscar todas as fotos de um estabelecimento
+    async buscaGaleiraPorEstabelecimento(userId: number): Promise<Array<string>> {
+      const user = await this.userService.getUserById(userId)
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui Estbalecimento vinculado a ele', 404)
+
+      const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
+      const urls = imagens.map(image => `http://localhost:3000/gerente/gallery/${image.foto}`);
+      console.log(urls)
+
+      return urls
+    }
+
+    //rota para buscar foto da galeria
+    async buscaFotoGaleria(userId: number, name: string): Promise<string> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimetno vinculado', 404)
+      
+      const path = join(__dirname,"..","..","images","gallery", name).replace("dist", "src");
+      
+      if(!fs.existsSync(path)) throw new HttpException('Imagem não encontrada', 404)
+      
+      return path
     }
 
     //rota para deletar foto da galeria
@@ -200,6 +231,15 @@ export class GerenteService {
       return await this.contatoService.criaContato(correctData, user.id_estabelecimento);
     }
 
+    //rota para buscar contato
+    async buscaContato(userId: number) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      return await this.contatoService.encontraContatoPorEstabelecimento(user.id_estabelecimento)
+    }
+
     //rota para alterar contato
     async alteraContato(data: any, userId: number) {
       const user = await this.userService.getUserById(userId);
@@ -223,7 +263,8 @@ export class GerenteService {
     }
 
     //rota para cadastrar evento
-    async cadastraEvento(data: CriarEventoDTO, userId: number, file: number) {
+    async cadastraEvento(data: CriarEventoDTO, userId: number, file: string): Promise<EventoDTO>  {
+      console.log(file)
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {
@@ -231,9 +272,19 @@ export class GerenteService {
       }
 
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
-      console.log(estabelecimento)
-      if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
 
-      return this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , String(file))
+      if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
+      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , file)
+     
+    }
+
+    //rota para buscar eventos por estabelecimento
+    async buscaEventoPorEstabelecimento(userId: number): Promise<EventoDTO[]> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
+
+      return await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+
     }
 }

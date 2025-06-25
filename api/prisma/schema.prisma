@@ -86,15 +86,15 @@ model Evento {
   id_evento          Int                @id @default(autoincrement())
   nome_evento        String             @db.VarChar(200)
   descricao          String?            @db.VarChar(1000)
-  data_criacao       DateTime?          @db.DateTime()
-  data_inicio        DateTime?          @db.DateTime()
-  data_fim           DateTime?          @db.DateTime()
-  estatus            Int?               @db.TinyInt
-  foto               String?            @db.VarChar(200)
-  id_estabelecimento Int?
-  id_endereco        Int?
-  Estabelecimento    Estabelecimento?   @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "Evento_ibfk_1")
-  Endereco           Endereco?          @relation(fields: [id_endereco], references: [id_endereco], onDelete: Cascade, map: "Evento_ibfk_2")
+  data_criacao       DateTime           @db.DateTime()
+  data_inicio        DateTime           @db.DateTime()
+  data_fim           DateTime           @db.DateTime()
+  estatus            Int                @db.TinyInt
+  foto               String             @db.VarChar(200)
+  id_estabelecimento Int
+  id_endereco        Int
+  Estabelecimento    Estabelecimento    @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onDelete: Cascade, map: "Evento_ibfk_1")
+  Endereco           Endereco           @relation(fields: [id_endereco], references: [id_endereco], onDelete: Cascade, map: "Evento_ibfk_2")
   Evento_Categoria   Evento_Categoria[]
 
   @@index([id_endereco], map: "id_endereco")
