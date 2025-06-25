@@ -231,6 +231,15 @@ export class GerenteService {
       return await this.contatoService.criaContato(correctData, user.id_estabelecimento);
     }
 
+    //rota para buscar contato
+    async buscaContato(userId: number) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      return await this.contatoService.encontraContatoPorEstabelecimento(user.id_estabelecimento)
+    }
+
     //rota para alterar contato
     async alteraContato(data: any, userId: number) {
       const user = await this.userService.getUserById(userId);

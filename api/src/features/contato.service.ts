@@ -29,9 +29,6 @@ export class ContatoService {
     async encontraContatoPorEstabelecimento(id_estabelecimento: number) {
         return await this.prisma.contato.findFirst({
             where: {Estabelecimento: {id_estabelecimento: id_estabelecimento}},
-            include: {
-                Estabelecimento: true
-            }
         }).then((response) => {
             return response;
         }).catch(error => {

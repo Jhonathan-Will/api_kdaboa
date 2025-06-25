@@ -211,6 +211,16 @@ export class GerenteController {
         }
     }
 
+    //rota para buscar estabelecimento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'busca pelos contatos do estabelecimento'})
+    @Get('/contact')
+    async BuscaContato(@Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaContato(req.user.sub))
+        }
+    }
+
     //rota para alterar contato do estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera contato do estabelecimento' })
