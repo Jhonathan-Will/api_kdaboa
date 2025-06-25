@@ -38,7 +38,7 @@ export class GerenteController {
         if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
             res.status(HttpStatus.OK).json( await this.gerenteService.buscaEstabelecimentoPorUserId(req.user.sub))
         }
-    }
+        }
 
     //rota para alterar estabelecimento
     @UseGuards(RefreshGuard)
