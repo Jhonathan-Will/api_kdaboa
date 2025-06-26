@@ -86,7 +86,7 @@ export class GerenteService {
         }
 
         try {
-            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo);
+            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo).catch(error => { console.log(error)});
             console.log(response)
             if(isNumber(response?.id_endereco )) return { id_endereco: response?.id_endereco };
         } catch (error) {

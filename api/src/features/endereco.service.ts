@@ -10,7 +10,7 @@ export class EnderecoService {
     async cadastrarEndereco(data: CriarEnderecoDTO, id_est: number, user_tipo: string) {
         if(user_tipo === 'Gerente'){                                        
 
-            return this.prisma.endereco.create({
+            return await this.prisma.endereco.create({
                 data: {
                     logradouro: data.logradouro,
                     numero: data.numero,
