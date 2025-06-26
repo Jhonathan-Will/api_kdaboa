@@ -320,4 +320,17 @@ export class GerenteService {
         console.log(error)
       })
     }
+
+    //rota para deletar evento
+    async deletaEvento(userId: number, eventId: number){
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      const event = await this.eventoService.buscaEventoPorId(eventId)
+
+      if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
+
+      return await this.eventoService.deletaEvento(eventId)
+    }
 }

@@ -14,6 +14,7 @@ import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Request, Response } from 'express';
+import { queryObjects } from 'v8';
 
 @Controller("gerente")
 export class GerenteController {
@@ -433,4 +434,13 @@ export class GerenteController {
         }
     }
 
+    //rota para deletar um evento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'deleta evento'})
+    @Delete('/event/:id')
+    async DeletaEvento(@Param('id') id: number, @Req() req: any,  @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json( await this.gerenteService.deletaEvento(req.user.sub, id))
+        }
+    }
 }
