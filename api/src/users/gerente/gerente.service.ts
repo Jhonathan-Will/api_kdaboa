@@ -169,7 +169,6 @@ export class GerenteService {
 
       const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
       const urls = imagens.map(image => `http://localhost:3000/gerente/gallery/${image.foto}`);
-      console.log(urls)
 
       return urls
     }
@@ -284,7 +283,54 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
 
-      return await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
 
+      return event.map(evento => ({
+        ...evento,
+        foto: `http://localhost:3000/gerente/events/?id=${evento.foto}`
+      }));
+
+      
+    }
+
+    //rota para alterar evento
+    async alteraEvento(userId: number, eventId: number, file: string, data: CriarEventoDTO) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      const event = await this.eventoService.buscaEventoPorId(eventId)
+
+      if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
+      
+      const path = join(__dirname,"..","..","images","events", event.foto).replace("dist", "src");
+              
+      try {
+        await fs.promises.unlink(path)
+
+        await this.eventoService.alteraCategoria(eventId, data.categoria)
+      } catch (erro) {
+        console.error("Erro ao alterar evento:", erro);
+        throw new HttpException('Erro ao alterar evento', 500);
+      }
+
+      await this.eventoService.alteraEvento(data, file, eventId).then(response => {
+        return response
+      }).catch(error => {
+        console.log(error)
+      })
+    }
+
+    //rota para deletar evento
+    async deletaEvento(userId: number, eventId: number){
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      const event = await this.eventoService.buscaEventoPorId(eventId)
+
+      if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
+
+      return await this.eventoService.deletaEvento(eventId)
     }
 }
