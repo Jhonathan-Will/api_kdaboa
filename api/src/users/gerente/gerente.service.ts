@@ -168,8 +168,7 @@ export class GerenteService {
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui Estbalecimento vinculado a ele', 404)
 
       const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
-      const urls = imagens.map(image => `http://localhost:3000/gerente/gallery/${image.foto}`);
-      console.log(urls)
+      const urls = imagens.map(image => `http://localhost:3000/gerente/gallery/?id=${image.foto}`);
 
       return urls
     }
@@ -284,7 +283,13 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
 
-      return await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
 
+      return event.map(evento => ({
+        ...evento,
+        foto: `http://localhost:3000/gerente/gallery/?id=${evento.foto}`
+      }));
+
+      
     }
 }
