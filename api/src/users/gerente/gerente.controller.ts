@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query} from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query, Param} from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
-import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -14,6 +14,7 @@ import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Request, Response } from 'express';
+import { queryObjects } from 'v8';
 
 @Controller("gerente")
 export class GerenteController {
@@ -174,8 +175,8 @@ export class GerenteController {
     //rota para buscar uma foto da galeira
     @ApiOperation({summary: 'Busca por uma foto da galeira'})
     @UseGuards(RefreshGuard)
-    @Get('/galerry')
-    async BuscaFoto(@Query('name') name: string, @Req() req: any, @Res() res: Response) {
+    @Get('/gallery/:name')
+    async BuscaFoto(@Param('name') name: string, @Req() req: any, @Res() res: Response) {
         if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).sendFile(await this.gerenteService.buscaFotoGaleria(req.user.sub, name))
         }
@@ -343,4 +344,103 @@ export class GerenteController {
         }
     }
 
+    //rota para alterar evento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Altera algum evento'})
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+            images: {
+                type: 'string',
+                format: 'binary',
+                description: 'Imagem do evento'
+            },
+            nome: {
+                type: 'string',
+                example: 'Festa de Aniversário',
+                description: 'Nome do evento'
+            },
+            descricao: {
+                type: 'string',
+                example: 'Uma festa incrível para celebrar meu aniversário',
+                description: 'Descrição do evento'
+            },
+            data_criacao: {
+                type: 'string',
+                example: '2023-10-01T12:00:00Z',
+                description: 'Data de criação do evento'
+            },
+            data_inicio: {
+                type: 'string',
+                example: '2023-10-15T18:00:00Z',
+                description: 'Data de início do evento'
+            },
+            data_fim: {
+                type: 'string',
+                example: '2023-10-15T23:59:59Z',
+                description: 'Data de fim do evento'
+            },
+            id_endereco: {
+                type: 'integer',
+                example: 1,
+                description: 'ID do estabelecimento onde o evento será realizado'
+            },
+            categoria: {
+                type: 'array',
+                items: { type: 'integer', example: 1 },
+                example: [1, 2, 3],
+                description: 'Categoria do evento, representada por um array de números'
+            }
+            },
+            required: [
+            'images',
+            'nome',
+            'descricao',
+            'data_criacao',
+            'data_inicio',
+            'data_fim',
+            'id_endereco',
+            'categoria'
+            ]
+        }
+    })
+    @UseInterceptors(FileInterceptor('images', {
+        storage: diskStorage({
+            destination: join(__dirname,"..","..","images","events").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname,"..","..","images","events", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @Put('/event')
+    async AltaraEvento(@Query('id') id: string, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json( await this.gerenteService.alteraEvento(req.user.sub, Number(id), req.file.filename, evento))
+        }
+    }
+
+    //rota para deletar um evento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'deleta evento'})
+    @Delete('/event/:id')
+    async DeletaEvento(@Param('id') id: number, @Req() req: any,  @Res() res: Response) {
+        if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])){
+            res.status(HttpStatus.OK).json( await this.gerenteService.deletaEvento(req.user.sub, id))
+        }
+    }
 }
