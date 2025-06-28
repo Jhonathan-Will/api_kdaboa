@@ -173,19 +173,6 @@ export class GerenteService {
       return urls
     }
 
-    //rota para buscar foto da galeria
-    async buscaFotoGaleria(userId: number, name: string): Promise<string> {
-      const user = await this.userService.getUserById(userId)
-
-      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimetno vinculado', 404)
-      
-      const path = join(__dirname,"..","..","images","gallery", name).replace("dist", "src");
-      
-      if(!fs.existsSync(path)) throw new HttpException('Imagem não encontrada', 404)
-      
-      return path
-    }
-
     //rota para deletar foto da galeria
     async deletaGaleria(id: number, userId: number) {
         const user = await this.userService.getUserById(userId);
