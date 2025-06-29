@@ -17,6 +17,6 @@ export class  AppController {
     @ApiOperation({summary: 'Busca por uma foto da galeira'})
     @Get('/gallery/:name')
     async BuscaFoto(@Param('name') name: string, @Req() req: any, @Res() res: Response) {
-        res.status(HttpStatus.OK).sendFile(await this.appService.buscaFotoGaleria(name))
+        res.sendFile(await this.appService.buscaFotoGaleria(name))
     }
 }
