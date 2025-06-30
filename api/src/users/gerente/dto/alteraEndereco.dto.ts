@@ -1,15 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class AlteraEnderecoDTO {
-
-    @ApiProperty({
-        description: 'ID do endereço',
-        example: 1,
-    })
-    @IsNumber({}, { message: 'ID deve ser um número' })
-    @IsNotEmpty({ message: 'ID é obrigatório' })
-    id: number;
 
     @ApiProperty({
         description: 'Logradouro do endereço',
@@ -62,6 +54,15 @@ export class AlteraEnderecoDTO {
     @IsOptional()
     @IsString({ message: 'Estado deve ser uma string' })
     estado: string;
+
+    @ApiProperty({
+        description: 'Indica se o endereço é favorito',
+        example: true,
+        required: false,
+    })
+    @IsOptional()
+    @IsBoolean({message: 'Deve ser verdaadeiro  ou  falso'})
+    favorito: boolean;
 
     @ApiProperty({
         description: 'CEP do endereço',

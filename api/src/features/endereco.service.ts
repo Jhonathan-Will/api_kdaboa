@@ -19,6 +19,7 @@ export class EnderecoService {
                     estado: data.estado,
                     cep: data.cep,
                     complemento: data.complemento,
+                    favorito: false,
                     Estabelecimento_Endereco: {
                         create: {
                             id_estabelecimento: id_est
@@ -44,7 +45,7 @@ export class EnderecoService {
         })
     }
 
-    async alteraEndereco(data: AlteraEnderecoDTO) {
+    async alteraEndereco(data: AlteraEnderecoDTO, addressId: number) {
         const updateData: any = {
             ...(data.logradouro && { logradouro: data.logradouro }),
             ...(data.numero && { numero: data.numero }),
@@ -52,11 +53,12 @@ export class EnderecoService {
             ...(data.cidade && { cidade: data.cidade }),
             ...(data.estado && { estado: data.estado }),
             ...(data.cep && { cep: data.cep }),
+            ...(data.favorito && {favorito: data.favorito}),
                 complemento: data.complemento 
         };
 
         return this.prisma.endereco.update({
-            where: { id_endereco: data.id },
+            where: { id_endereco: addressId },
             data: updateData
         });
     }
