@@ -33,7 +33,7 @@ model Endereco {
   estado          String           @db.Char(2)
   cep             String           @db.VarChar(8)
   Evento          Evento[]
-
+  favorito        Boolean          @db.TinyInt
   Estabelecimento_Endereco Estabelecimento_Endereco[] @relation(map: "fk_endereco")
 }
 

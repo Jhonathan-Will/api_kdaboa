@@ -114,7 +114,7 @@ export class GerenteService {
     }
 
     // Rota para alterar endereço
-    async alteraEndereco(data: AlteraEnderecoDTO, userId: number){
+    async alteraEndereco(data: AlteraEnderecoDTO, userId: number,  addressId:  number){
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento) {
@@ -124,8 +124,8 @@ export class GerenteService {
       const endereco = await this.enderecoService.encontrarEnderecoPorEstabelecimento(user.id_estabelecimento);
 
       for (const end of endereco) {
-        if (end.id_endereco === data.id) {
-          return await this.enderecoService.alteraEndereco(data);
+        if (end.id_endereco === addressId) {
+          return await this.enderecoService.alteraEndereco(data, addressId);
         }
       }
 
