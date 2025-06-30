@@ -274,7 +274,7 @@ export class GerenteService {
 
       return event.map(evento => ({
         ...evento,
-        foto: `http://localhost:3000/gerente/events/?id=${evento.foto}`
+        foto: `http://localhost:3000/gerente/events/${evento.foto}`
       }));
 
       

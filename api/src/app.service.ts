@@ -14,4 +14,12 @@ export class AppService {
         
         return path
     }
+
+    async buscaFotoEvento(name: string): Promise<string> {
+        const path = join(__dirname, "images","event", name).replace("dist", "src");
+
+        if(!fs.existsSync(path)) throw new HttpException('Imagem não encontrada', 404)
+
+        return path
+    }
 }
