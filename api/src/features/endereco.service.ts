@@ -57,7 +57,8 @@ export class EnderecoService {
                 complemento: data.complemento 
         };
 
-        return this.prisma.endereco.update({
+
+        return await this.prisma.endereco.update({
             where: { id_endereco: addressId },
             data: updateData
         });
