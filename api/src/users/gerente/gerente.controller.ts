@@ -91,9 +91,9 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o endereço do usuário' })
     @Put("/address")
-    AlteraEndereco(@Body() endereco: AlteraEnderecoDTO, @Req() req: any) {
+    AlteraEndereco(@Param('id') id: number, @Body() endereco: AlteraEnderecoDTO, @Req() req: any) {
         if(this.csrf.validateToken(req.headers['x-csrf-token'] || req.cookies['x-csrf-token'])) {
-            return this.gerenteService.alteraEndereco(endereco, req.user.sub);
+            return this.gerenteService.alteraEndereco(endereco, req.user.sub, id);
         }
     }
 
