@@ -45,7 +45,7 @@ export class EnderecoService {
         })
     }
 
-    async alteraEndereco(data: AlteraEnderecoDTO, addressId: number) {
+    async alteraEndereco(data: AlteraEnderecoDTO, addressId: number, estabelecimentoId: number) {
         const updateData: any = {
             ...(data.logradouro && { logradouro: data.logradouro }),
             ...(data.numero && { numero: data.numero }),
@@ -57,11 +57,26 @@ export class EnderecoService {
                 complemento: data.complemento 
         };
 
+        if(updateData.favorito == true){await this.limpaFavorito(estabelecimentoId)}
 
         return await this.prisma.endereco.update({
             where: { id_endereco: addressId },
             data: updateData
         });
+    }
+
+    async limpaFavorito(estabelecimentoId) {
+        await this.prisma.endereco.updateMany({
+            where: {favorito: true,
+                    Estabelecimento_Endereco: {
+                        some: {
+                            id_estabelecimento: estabelecimentoId
+                        }
+                    }},
+            data: {favorito: false}
+        }).then(response => {console.log(response)}).catch(error => {
+            console.log(error)
+        })
     }
 
     async deletaEndereco(id: number) {

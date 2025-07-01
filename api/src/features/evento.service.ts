@@ -35,16 +35,44 @@ export class EventoService {
         return await this.prisma.evento.findMany({
             where: {id_estabelecimento: id_est},
             include: {
-                Evento_Categoria: true
+            Endereco: true,
+            Estabelecimento: true,
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
             }
         })
     }
 
     async buscaEventoPorId(eventId: number) {
         return await this.prisma.evento.findUnique({
-            where: {id_evento: eventId}
-        })
+            where: { id_evento: eventId },
+            include: {
+            Endereco: true,
+            Estabelecimento: true,
+            Evento_Categoria: {
+                include: {
+                Categoria: {
+                    select: {
+                    id_categoria: true,
+                    nome_categoria: true,
+                    icone: true
+                    }
+                }
+                }
+            }
+            }
+        });
     }
+
 
     async alteraCategoria(eventId: number, data: Array<number>) {
         // Remove todas as categorias antigas do evento
