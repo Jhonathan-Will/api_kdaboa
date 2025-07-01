@@ -15,6 +15,7 @@ import { doubleCsrf } from 'csrf-csrf'
 import { join } from 'path';
 
 dotenv.config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 async function bootstrap() {
   

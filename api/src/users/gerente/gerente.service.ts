@@ -86,7 +86,7 @@ export class GerenteService {
         }
 
         try {
-            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo);
+            const response = await this.enderecoService.cadastrarEndereco(data, usuario.id_estabelecimento, usuario.tipo).catch(error => { console.log(error)});
             console.log(response)
             if(isNumber(response?.id_endereco )) return { id_endereco: response?.id_endereco };
         } catch (error) {
@@ -174,33 +174,61 @@ export class GerenteService {
     }
 
     //rota para deletar foto da galeria
-    async deletaGaleria(id: number, userId: number) {
-        const user = await this.userService.getUserById(userId);
+    // async deletaGaleria(id: number, userId: number) {
+    //     const user = await this.userService.getUserById(userId);
 
-        if (!user || !user.id_estabelecimento) {
-            throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
-        }
+    //     if (!user || !user.id_estabelecimento) {
+    //         throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+    //     }
 
-        const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
+    //     const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
 
-        for (const item of galeria) {
-            if (item.id_gal === id) {
+    //     for (const item of galeria) {
+    //         if (item.id_gal === id) {
 
-              const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
+    //           const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
               
-              try {
-                fs.promises.unlink(path)
-              } catch (erro) {
-                console.error("Erro ao deletar arquivo:", erro);
-                throw new HttpException('Erro ao deletar arquivo', 500);
-              }
-              return await this.galeriaService.deletaGaleria(item.id_gal);
-            }
-        }
+    //           try {
+    //             fs.promises.unlink(path)
+    //           } catch (erro) {
+    //             console.error("Erro ao deletar arquivo:", erro);
+    //             throw new HttpException('Erro ao deletar arquivo', 500);
+    //           }
+    //           return await this.galeriaService.deletaGaleria(item.id_gal);
+    //         }
+    //     }
 
-        throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
-    }
+    //     throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
+    // }
 
+    //rota para deletar foto da galeria por nome
+    async deletaGaleria(nomeFoto: string, userId: number) {
+      const user = await this.userService.getUserById(userId);
+  
+      if (!user || !user.id_estabelecimento) {
+          throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
+      }
+  
+      const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
+  
+      const imagem = galeria.find(item => item.foto === nomeFoto);
+  
+      if (!imagem) {
+          throw new HttpException('Imagem não encontrada para este estabelecimento', 404);
+      }
+  
+      const path = join(__dirname, "..", "..", "images", "gallery", imagem.foto).replace("dist", "src");
+  
+      try {
+          await fs.promises.unlink(path); // <- faltava o await
+      } catch (erro) {
+          console.error("Erro ao deletar arquivo:", erro);
+          throw new HttpException('Erro ao deletar arquivo', 500);
+      }
+  
+      return await this.galeriaService.deletaGaleria(imagem.id_gal);
+  }
+  
     // rota para criar contato
     async cadastaContato(data: any, userId: number) {
       const user = await this.userService.getUserById(userId);

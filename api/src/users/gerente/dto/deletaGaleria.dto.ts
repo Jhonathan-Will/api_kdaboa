@@ -1,12 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsString } from "class-validator";
 
-export class DeletaEnderecoDTO {
+export class DeletaGaleriaDTO {
     @ApiProperty({
-        description: 'ID do endereço a ser deletado',
-        example: 1,
+        description: 'Nome da imagem a ser deletada',
+        example: 'imagem1.jpg',
     })
-    @IsNumber({}, { message: 'ID deve ser um número' })
-    @IsNotEmpty({ message: 'ID é obrigatório' })
-    id: number;
+    @IsString({ message: 'Nome deve ser uma string' })
+    @IsNotEmpty({ message: 'Nome da imagem é obrigatório' })
+    nome: string;
 }
