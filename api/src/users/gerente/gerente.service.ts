@@ -125,7 +125,7 @@ export class GerenteService {
 
       for (const end of endereco) {
         if (end.id_endereco === addressId) {
-          return await this.enderecoService.alteraEndereco(data, addressId);
+          return await this.enderecoService.alteraEndereco(data, addressId, user.id_estabelecimento);
         }
       }
 
@@ -302,7 +302,7 @@ export class GerenteService {
 
       return event.map(evento => ({
         ...evento,
-        foto: `http://localhost:3000/gerente/events/?id=${evento.foto}`
+        foto: `http://localhost:3000/event/image/${evento.foto}`
       }));
 
       
