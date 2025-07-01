@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Param, Redirect, Req, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, ParseIntPipe, Redirect, Req, Res } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AppService } from './app.service';
@@ -22,8 +22,15 @@ export class  AppController {
 
     //rota para buscar foto de evento
     @ApiOperation({summary: 'busca pela foto do estabelecimento'})
-    @Get('/event/:name')
+    @Get('/event/image/:name')
     async BuscaFotoEvento(@Param('name') name: string, @Res() res: Response) {
         res.sendFile(await this.appService.buscaFotoEvento(name))
+    }
+
+    //rota pra buscar evento pelo id
+    @ApiOperation({summary: 'busca evento pelo id'})
+    @Get('/event/:id')
+    async BuscaEvento(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+        res.status(HttpStatus.OK).json(await this.appService.buscaEvento(id))
     }
 }
