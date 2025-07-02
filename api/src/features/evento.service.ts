@@ -30,6 +30,9 @@ export class EventoService {
             }
         })
     }
+    async buscaTodosEventos() {
+        return await this.prisma.evento.findMany()
+    }
 
     async buscaPorEstabelecimento(id_est: number) {
         return await this.prisma.evento.findMany({
