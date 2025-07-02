@@ -11,7 +11,7 @@ export class EventoService {
             data: {
                 nome_evento: data.nome,
                 descricao: data.descricao,
-                data_criacao: data.data_criacao,
+                data_criacao: new Date(),
                 data_inicio: data.data_inicio,
                 data_fim: data.data_fim,
                 estatus: status,
@@ -73,6 +73,41 @@ export class EventoService {
         });
     }
 
+    async buscaEventosFiltrados(filtros: { name?: string; category?: number; date?: string }) {
+        const { name, category, date } = filtros;
+
+        return this.prisma.evento.findMany({
+            where: {
+                ...(name && { nome_evento: { contains: name } }),
+                ...(date && {
+                    data_inicio: {
+                        gte: new Date(`${date}T00:00:00.000Z`),
+                        lte: new Date(`${date}T23:59:59.999Z`)
+                    }
+                }),
+                ...(category && {
+                    Evento_Categoria: {
+                        some: { id_categoria: category }
+                    }
+                })
+            },
+            include: {
+                Endereco: true,
+                Estabelecimento: true,
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
 
     async alteraCategoria(eventId: number, data: Array<number>) {
         // Remove todas as categorias antigas do evento
@@ -96,7 +131,6 @@ export class EventoService {
                 data: {
                     nome_evento: data.nome,
                     descricao: data.descricao,
-                    data_criacao: data.data_criacao,
                     data_inicio: data.data_inicio,
                     data_fim: data.data_fim,
                     foto,

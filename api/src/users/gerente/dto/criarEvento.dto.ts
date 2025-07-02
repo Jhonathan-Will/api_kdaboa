@@ -21,13 +21,6 @@ export class CriarEventoDTO {
     descricao: string;
 
     @ApiProperty({
-        description: 'Data de criação do evento',
-        example: '2023-10-01T12:00:00Z'
-    })
-    @IsNotEmpty({ message: 'Data de criação não pode ser vazia' })
-    data_criacao: Date;
-
-    @ApiProperty({
         description: 'Data de início do evento',
         example: '2023-10-15T18:00:00Z'
     })
