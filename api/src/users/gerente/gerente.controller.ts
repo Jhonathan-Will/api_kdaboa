@@ -15,6 +15,7 @@ import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
+import { AlterarEventoDTO } from './dto/alteraEvento.dto';
 
 @Controller("gerente")
 export class GerenteController {
@@ -372,11 +373,6 @@ export class GerenteController {
                     example: 'Uma festa incrível para celebrar meu aniversário',
                     description: 'Descrição do evento'
                 },
-                data_criacao: {
-                    type: 'string',
-                    example: '2023-10-01T12:00:00Z',
-                    description: 'Data de criação do evento'
-                },
                 data_inicio: {
                     type: 'string',
                     example: '2023-10-15T18:00:00Z',
@@ -403,7 +399,6 @@ export class GerenteController {
                 'images',
                 'nome',
                 'descricao',
-                'data_criacao',
                 'data_inicio',
                 'data_fim',
                 'id_endereco',
@@ -434,7 +429,7 @@ export class GerenteController {
     }))
     @ApiConsumes('multipart/form-data')
     @Put('/event')
-    async AltaraEvento(@Query('id') id: string, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response) {
+    async AltaraEvento(@Query('id') id: string, @Body() evento: AlterarEventoDTO, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.alteraEvento(req.user.sub, Number(id), req.file.filename, evento))
         }

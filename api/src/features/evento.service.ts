@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AlterarEventoDTO } from "src/users/gerente/dto/alteraEvento.dto";
 import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
 
 @Injectable()
@@ -89,14 +90,13 @@ export class EventoService {
         });
     }
 
-    async alteraEvento(data: CriarEventoDTO, foto: string, eventId: number) {
+    async alteraEvento(data: AlterarEventoDTO, foto: string, eventId: number) {
         try {
             return  this.prisma.evento.update({
                 where: { id_evento: eventId },
                 data: {
                     nome_evento: data.nome,
                     descricao: data.descricao,
-                    data_criacao: data.data_criacao,
                     data_inicio: data.data_inicio,
                     data_fim: data.data_fim,
                     foto,

@@ -15,6 +15,7 @@ import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
+import { AlterarEventoDTO } from "./dto/alteraEvento.dto";
 @Injectable()
 export class GerenteService {
     
@@ -309,7 +310,7 @@ export class GerenteService {
     }
 
     //rota para alterar evento
-    async alteraEvento(userId: number, eventId: number, file: string, data: CriarEventoDTO) {
+    async alteraEvento(userId: number, eventId: number, file: string, data: AlterarEventoDTO) {
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
