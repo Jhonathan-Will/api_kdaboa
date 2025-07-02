@@ -76,7 +76,7 @@ export class EventoService {
         });
     }
 
-    async buscaEventosFiltrados(filtros: { name?: string; category?: number; date?: string }) {
+    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; date?: string }) {
         const { name, category, date } = filtros;
 
         return this.prisma.evento.findMany({
@@ -88,9 +88,9 @@ export class EventoService {
                         lte: new Date(`${date}T23:59:59.999Z`)
                     }
                 }),
-                ...(category && {
+                ...(category && category.length > 0 && {
                     Evento_Categoria: {
-                        some: { id_categoria: category }
+                        some: { id_categoria: {in: category} }
                     }
                 })
             },
