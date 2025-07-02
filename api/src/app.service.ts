@@ -30,6 +30,9 @@ export class AppService {
     }
 
     async filtraEvento(filtros: { name?: string; category?: number; date?: string }) {
+        if(!filtros.name && !filtros.category && !filtros.date){
+            return await this.eventoService.buscaTodosEventos()
+        }
         return await this.eventoService.buscaEventosFiltrados(filtros)
     }
 }
