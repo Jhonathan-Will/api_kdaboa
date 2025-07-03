@@ -31,8 +31,16 @@ export class AppService {
 
     async filtraEvento(filtros: { name?: string; category?: number[]; date?: string }) {
         if(!filtros.name && (!filtros.category || filtros.category.length == 0)&& !filtros.date){
-            return await this.eventoService.buscaTodosEventos()
+            const eventos = await this.eventoService.buscaTodosEventos()
+            return eventos.map(evento => ({
+                ...evento,
+                foto: `http://localhost:3000/event/image/${evento.foto}` 
+            }))
         }
-        return await this.eventoService.buscaEventosFiltrados(filtros)
+        const eventos = await this.eventoService.buscaEventosFiltrados(filtros)
+            return eventos.map(evento => ({
+                ...evento,
+                foto: `http://localhost:3000/event/image/${evento.foto}` 
+            }))
     }
 }
