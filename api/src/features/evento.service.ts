@@ -39,7 +39,11 @@ export class EventoService {
             where: {id_estabelecimento: id_est},
             include: {
             Endereco: true,
-            Estabelecimento: true,
+            Estabelecimento: {
+                include: {
+                    Contato: true
+                }
+            },
                 Evento_Categoria: {
                     include: {
                         Categoria: {
@@ -60,7 +64,11 @@ export class EventoService {
             where: { id_evento: eventId },
             include: {
             Endereco: true,
-            Estabelecimento: true,
+            Estabelecimento: {
+                include: {
+                    Contato: true
+                }
+            },
             Evento_Categoria: {
                 include: {
                 Categoria: {
@@ -96,7 +104,11 @@ export class EventoService {
             },
             include: {
                 Endereco: true,
-                Estabelecimento: true,
+                Estabelecimento: {
+                    include: {
+                        Contato: true
+                    }
+                },
                 Evento_Categoria: {
                     include: {
                         Categoria: {
@@ -140,7 +152,12 @@ export class EventoService {
                     id_endereco: data.id_endereco,
                 },
                 include: {
-                    Evento_Categoria: true
+                    Evento_Categoria: true,
+                    Estabelecimento: {
+                        include: {
+                            Contato: true
+                        }
+                    }
                 },
             })
         } catch (error) {
