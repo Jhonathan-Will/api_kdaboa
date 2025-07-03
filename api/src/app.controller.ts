@@ -42,9 +42,14 @@ export class  AppController {
     @Get('/event')
     async BuscaEventosFiltrados(@Res() res: Response,
                                 @Query('name') name?: string,
-                                @Query('category') category?: number,
+                                @Query('category') category?: number[] | number,
                                 @Query('date') date?: string) {
-        
-        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category, date}))
+        let categories: number[] = [];
+        if (Array.isArray(category)) {
+            categories = category.map(Number);
+        } else if (category !== undefined) {
+            categories = [Number(category)];
+        }
+        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date}))
     }
 }
