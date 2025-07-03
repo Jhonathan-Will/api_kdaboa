@@ -52,4 +52,10 @@ export class  AppController {
         }
         res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date}))
     }
+
+    @ApiOperation({summary: 'busca pelo estabelecimento'})
+    @Get("/estableshiment/:id")
+    async buscaEstabelecimento(@Param('id') id: number, @Res() res: Response) {
+        res.status(HttpStatus.OK).json(await this.appService.buscaEstabelecimento(id))
+    }
 }

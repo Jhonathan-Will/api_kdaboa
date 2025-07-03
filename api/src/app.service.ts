@@ -3,10 +3,13 @@ import { join } from "path";
 import * as fs from 'fs';
 
 import { EventoService } from 'src/features/evento.service'
+import { EstabelecimentoService } from "./features/estabelecimento.service";
 
 @Injectable()
 export class AppService {
-    constructor(private readonly eventoService: EventoService) { }
+    constructor(private readonly eventoService: EventoService,
+                private readonly estabelecimentoService: EstabelecimentoService
+    ) { }
 
     //rota para buscar foto da galeria
     async buscaFotoGaleria(name: string): Promise<string> {
@@ -42,5 +45,22 @@ export class AppService {
                 ...evento,
                 foto: `http://localhost:3000/event/image/${evento.foto}` 
             }))
+    }
+
+    async buscaEstabelecimento(id: number) {
+        const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(id)
+
+        if ( !estabelecimento?.Galeria) return estabelecimento
+
+        // If Galeria is an array, map over it to update the foto property
+        if (Array.isArray(estabelecimento.Galeria)) {
+            return {
+                ...estabelecimento,
+                Galeria: estabelecimento.Galeria.map(gal => ({
+                    ...gal,
+                    foto: `http://localhost:3000/gallery/${gal.foto}`
+                }))
+            }
+        } 
     }
 }
