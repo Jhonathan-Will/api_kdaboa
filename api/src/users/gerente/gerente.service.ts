@@ -332,6 +332,7 @@ export class GerenteService {
       await this.eventoService.alteraEvento(data, file, eventId).then(response => {
         return response
       }).catch(error => {
+                    console.log('aaaaaaaaaaa')
         console.log(error)
       })
     }

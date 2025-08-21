@@ -52,7 +52,10 @@ export class  AppController {
         } else if (category !== undefined) {
             categories = [Number(category)];
         }
-        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date}))
+
+        const [day,month, year] = date? date.split('/'): [undefined, undefined, undefined];
+
+        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date: !date ? undefined : new Date(`${year}-${month}-${day}T00:00:00.000Z`)}))
     }
 
     @ApiOperation({summary: 'busca pelo estabelecimento'})

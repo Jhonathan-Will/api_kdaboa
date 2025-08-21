@@ -32,8 +32,11 @@ export class AppService {
         return await this.eventoService.buscaEventoPorId(id)
     }
 
-    async filtraEvento(filtros: { name?: string; category?: number[]; date?: string }) {
-        if(!filtros.name && (!filtros.category || filtros.category.length == 0)&& !filtros.date){
+    async filtraEvento(filtros: { name?: string; category?: number[]; date?: Date }) {
+
+        console.log(filtros)
+
+        if(!filtros.name && (!filtros.category || filtros.category.length == 0) && !filtros.date){
             const eventos = await this.eventoService.buscaTodosEventos()
             return eventos.map(evento => ({
                 ...evento,
@@ -41,6 +44,7 @@ export class AppService {
             }))
         }
         const eventos = await this.eventoService.buscaEventosFiltrados(filtros)
+        console.log(eventos)
             return eventos.map(evento => ({
                 ...evento,
                 foto: `http://localhost:3000/event/image/${evento.foto}` 
