@@ -4,9 +4,12 @@ import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
 
 @Injectable()
 export class EventoService {
-    constructor(private prisma: PrismaService){}
-
+    constructor(private prisma: PrismaService){
+       
+    }
+    
     async cadastraEvento(data: CriarEventoDTO, id_est: number, status: number, foto: string) {
+
       return  this.prisma.evento.create({
             data: {
                 nome_evento: data.nome,
@@ -30,6 +33,7 @@ export class EventoService {
             }
         })
     }
+    
     async buscaTodosEventos() {
         return await this.prisma.evento.findMany()
     }
@@ -84,19 +88,19 @@ export class EventoService {
         });
     }
 
-    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; date?: string }) {
-        const { name, category, date } = filtros;
-
-        return this.prisma.evento.findMany({
-            where: {
-                ...(name && { nome_evento: { contains: name } }),
-                ...(date && {
-                    data_inicio: {
-                        gte: new Date(`${date}T00:00:00.000Z`),
-                        lte: new Date(`${date}T23:59:59.999Z`)
-                    }
-                }),
-                ...(category && category.length > 0 && {
+    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; date?: Date }) {
+        try{
+            const { name, category, date } = filtros;
+            return this.prisma.evento.findMany({
+                where: {
+                    ...(name && { nome_evento: { contains: name } }),
+                    ...(date && {
+                        data_inicio: {
+                            gte: date,
+                            lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000)
+                        }
+                    }),
+                    ...(category && category.length > 0 && {
                     Evento_Categoria: {
                         some: { id_categoria: {in: category} }
                     }
@@ -122,6 +126,11 @@ export class EventoService {
                 },
             }
         })
+
+        }catch(error){
+        console.error('Erro em buscaEventosFiltrados:', error);
+        throw new Error(`Erro em buscaEventosFiltrados: ${error.message}`);
+        }   
     }
 
     async alteraCategoria(eventId: number, data: Array<number>) {
