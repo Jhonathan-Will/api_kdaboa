@@ -4,10 +4,10 @@ import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
 
 @Injectable()
 export class EventoService {
-    constructor(private prisma: PrismaService){}
+    constructor(private prisma: PrismaService) { }
 
     async cadastraEvento(data: CriarEventoDTO, id_est: number, status: number, foto: string) {
-      return  this.prisma.evento.create({
+        return this.prisma.evento.create({
             data: {
                 nome_evento: data.nome,
                 descricao: data.descricao,
@@ -36,14 +36,15 @@ export class EventoService {
 
     async buscaPorEstabelecimento(id_est: number) {
         return await this.prisma.evento.findMany({
-            where: {id_estabelecimento: id_est},
+            where: { id_estabelecimento: id_est },
             include: {
-            Endereco: true,
-            Estabelecimento: {
-                include: {
-                    Contato: true
-                }
-            },
+                Endereco: true,
+                Estabelecimento: {
+                    include: {
+                        Contato: true,
+                        Galeria: true
+                    }
+                },
                 Evento_Categoria: {
                     include: {
                         Categoria: {
@@ -63,23 +64,24 @@ export class EventoService {
         return await this.prisma.evento.findUnique({
             where: { id_evento: eventId },
             include: {
-            Endereco: true,
-            Estabelecimento: {
-                include: {
-                    Contato: true
-                }
-            },
-            Evento_Categoria: {
-                include: {
-                Categoria: {
-                    select: {
-                    id_categoria: true,
-                    nome_categoria: true,
-                    icone: true
+                Endereco: true,
+                Estabelecimento: {
+                    include: {
+                        Contato: true,
+                        Galeria: true,
+                    }
+                },
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
                     }
                 }
-                }
-            }
             }
         });
     }
@@ -98,7 +100,7 @@ export class EventoService {
                 }),
                 ...(category && category.length > 0 && {
                     Evento_Categoria: {
-                        some: { id_categoria: {in: category} }
+                        some: { id_categoria: { in: category } }
                     }
                 })
             },
@@ -141,7 +143,7 @@ export class EventoService {
 
     async alteraEvento(data: CriarEventoDTO, foto: string, eventId: number) {
         try {
-            return  this.prisma.evento.update({
+            return this.prisma.evento.update({
                 where: { id_evento: eventId },
                 data: {
                     nome_evento: data.nome,
@@ -161,13 +163,13 @@ export class EventoService {
                 },
             })
         } catch (error) {
-            console.log(error)    
+            console.log(error)
         }
     }
 
     async deletaEvento(eventId: number) {
         return await this.prisma.evento.delete({
-            where: {id_evento: eventId}
+            where: { id_evento: eventId }
         })
     }
 
