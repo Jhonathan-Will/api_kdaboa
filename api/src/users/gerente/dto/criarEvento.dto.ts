@@ -38,8 +38,8 @@ export class CriarEventoDTO {
         description: 'ID do estabelecimento onde o evento será realizado',
         example: 1
     })
-    @IsNotEmpty({ message: 'ID do estabelecimento não pode ser vazio' })
-    @IsNumber({}, { message: 'ID do estabelecimento deve ser um número' })
+    @IsNotEmpty({ message: 'ID do endereço não pode ser vazio' })
+    @IsNumber({}, { message: 'ID do endereço deve ser um número' })
     @Type(() => Number)
     id_endereco: number;
 

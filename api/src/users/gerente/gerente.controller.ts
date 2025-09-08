@@ -173,20 +173,6 @@ export class GerenteController {
     }
 
     //rota para deletar foto da galeria
-    // @UseGuards(RefreshGuard)
-    // @ApiOperation({ summary: 'Busca as imagens da galeria do usuário' })
-    // @Delete("/gallery")
-    // DeletaGaleria(@Body() id: DeletaEnderecoDTO, @Req() req: any) {
-    //     if(this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
-    //         return this.gerenteService.deletaGaleria(id.id, req.user.sub);
-    //     }else{
-    //         throw new HttpException({
-    //         status: 403,
-    //         error: 'Token CSRF inválido'
-    //         }, 405);
-    //     }
-    // }
-
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Deleta uma imagem da galeria do usuário' })
     @Delete("/gallery")
@@ -200,8 +186,6 @@ export class GerenteController {
             }, 405);
         }
     }
-
-
 
     //rota para cadastrar contato para estabelecimento
     @UseGuards(RefreshGuard)
@@ -433,10 +417,10 @@ export class GerenteController {
         })
     }))
     @ApiConsumes('multipart/form-data')
-    @Put('/event')
-    async AltaraEvento(@Query('id') id: string, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response) {
+    @Put('/event/:id')
+    async AltaraEvento(@Param('id') id: number, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
-            res.status(HttpStatus.OK).json(await this.gerenteService.alteraEvento(req.user.sub, Number(id), req.file.filename, evento))
+            res.status(HttpStatus.OK).json(await this.gerenteService.alteraEvento(req.user.sub, id, req.file.filename, evento))
         }
     }
 

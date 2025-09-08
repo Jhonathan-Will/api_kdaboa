@@ -44,15 +44,19 @@ export class  AppController {
     @Get('/event')
     async BuscaEventosFiltrados(@Res() res: Response,
                                 @Query('name') name?: string,
-                                @Query('category') category?: number[] | number,
+                                @Query('category') category?: string[] | string,
                                 @Query('date') date?: string) {
         let categories: number[] = [];
         if (Array.isArray(category)) {
             categories = category.map(Number);
+        } else if (typeof category === 'string') {
+            categories = category.split(',').map((v) => Number(v.trim()));
         } else if (category !== undefined) {
             categories = [Number(category)];
         }
-        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date}))
+        const [day,month, year] = date? date.split('/'): [undefined, undefined, undefined];
+
+        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date: !date ? undefined : new Date(`${year}-${month}-${day}T00:00:00.000Z`)}))
     }
 
     @ApiOperation({summary: 'busca pelo estabelecimento'})

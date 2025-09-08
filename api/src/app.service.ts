@@ -32,8 +32,8 @@ export class AppService {
         return await this.eventoService.buscaEventoPorId(id)
     }
 
-    async filtraEvento(filtros: { name?: string; category?: number[]; date?: string }) {
-        if(!filtros.name && (!filtros.category || filtros.category.length == 0)&& !filtros.date){
+    async filtraEvento(filtros: { name?: string; category?: number[]; date?: Date }) {
+        if(!filtros.name && (!filtros.category || filtros.category.length == 0) && !filtros.date){
             const eventos = await this.eventoService.buscaTodosEventos()
             return eventos.map(evento => ({
                 ...evento,
@@ -52,7 +52,6 @@ export class AppService {
 
         if ( !estabelecimento?.Galeria) return estabelecimento
 
-        // If Galeria is an array, map over it to update the foto property
         if (Array.isArray(estabelecimento.Galeria)) {
             return {
                 ...estabelecimento,
