@@ -34,7 +34,11 @@ export class EventoService {
     }
     
     async buscaTodosEventos() {
-        return await this.prisma.evento.findMany()
+        return await this.prisma.evento.findMany({
+            include: {
+                Endereco: true,
+            }
+        })
     }
 
     async buscaPorEstabelecimento(id_est: number) {
