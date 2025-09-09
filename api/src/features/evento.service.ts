@@ -37,6 +37,17 @@ export class EventoService {
         return await this.prisma.evento.findMany({
             include: {
                 Endereco: true,
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
             }
         })
     }
