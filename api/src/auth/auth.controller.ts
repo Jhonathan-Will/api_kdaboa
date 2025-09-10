@@ -23,10 +23,7 @@ export class AuthController {
     @Post("singin")
     async createGerente(@Body() gerente: CriarGereneteDTO) {
         try {
-            // lógica aqui
-            return await this.authService.singIn(gerente).catch((error) => {
-                console.log(error)
-            });
+            return await this.authService.singIn(gerente)
         } catch (err) {
             console.error('Erro no signin:', err);
 
