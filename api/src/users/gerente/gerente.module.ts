@@ -10,7 +10,6 @@ import { FeatureModule } from 'src/features/features.module';
 @Module({
   imports: [CsrfModule, UsersModule, FeatureModule],
   controllers: [GerenteController],
-  providers: [PrismaService, GerenteService, UsersService],
-  exports: []
+  providers: [PrismaService, GerenteService, UsersService]
 })
 export class GerenteModule {}
