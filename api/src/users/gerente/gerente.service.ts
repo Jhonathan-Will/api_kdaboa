@@ -250,7 +250,6 @@ export class GerenteService {
 
     //rota para cadastrar evento
     async cadastraEvento(data: CriarEventoDTO, userId: number, file: string): Promise<EventoDTO>  {
-      console.log(file)
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {

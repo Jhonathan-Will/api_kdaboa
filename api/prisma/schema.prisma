@@ -42,7 +42,7 @@ model Estabelecimento {
   nome                      String                      @db.VarChar(200)
   cnpj                      String                      @db.VarChar(14)
   descricao                 String                      @db.VarChar(1000)
-  status                    Int?                        @db.TinyInt
+  status                    Int                         @db.TinyInt
   imagem                    String?                     @db.VarChar(200)
   id_contato                Int?                        @unique(map: "id_contato")
   Contato                   Contato?                    @relation(fields: [id_contato], references: [id_contato], onDelete: NoAction, map: "fk_estabelecimento_contato")
