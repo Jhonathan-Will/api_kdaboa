@@ -173,34 +173,6 @@ export class GerenteService {
       return urls
     }
 
-    //rota para deletar foto da galeria
-    // async deletaGaleria(id: number, userId: number) {
-    //     const user = await this.userService.getUserById(userId);
-
-    //     if (!user || !user.id_estabelecimento) {
-    //         throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
-    //     }
-
-    //     const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
-
-    //     for (const item of galeria) {
-    //         if (item.id_gal === id) {
-
-    //           const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
-              
-    //           try {
-    //             fs.promises.unlink(path)
-    //           } catch (erro) {
-    //             console.error("Erro ao deletar arquivo:", erro);
-    //             throw new HttpException('Erro ao deletar arquivo', 500);
-    //           }
-    //           return await this.galeriaService.deletaGaleria(item.id_gal);
-    //         }
-    //     }
-
-    //     throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
-    // }
-
     //rota para deletar foto da galeria por nome
     async deletaGaleria(nomeFoto: string, userId: number) {
       const user = await this.userService.getUserById(userId);
