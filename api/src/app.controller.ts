@@ -20,8 +20,6 @@ export class  AppController {
         res.sendFile(await this.appService.buscaFotoGaleria(name))
     }
    
-
-
     //rota para buscar foto de evento
     @ApiOperation({summary: 'busca pela foto do estabelecimento'})
     @Get('/event/image/:name')
@@ -59,6 +57,7 @@ export class  AppController {
         res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date: !date ? undefined : new Date(`${year}-${month}-${day}T00:00:00.000Z`)}))
     }
 
+    //rota para buscar estabelecimento pelo id
     @ApiOperation({summary: 'busca pelo estabelecimento'})
     @Get("/estableshiment/:id")
     async buscaEstabelecimento(@Param('id') id: number, @Res() res: Response) {

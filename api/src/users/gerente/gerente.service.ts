@@ -3,7 +3,6 @@ import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
 import { CsrfService } from "src/security/csrf/csrf.service";
-import { PrismaService } from "src/prisma/prisma.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
