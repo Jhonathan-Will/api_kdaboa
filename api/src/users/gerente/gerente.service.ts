@@ -3,7 +3,6 @@ import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
 import { CsrfService } from "src/security/csrf/csrf.service";
-import { PrismaService } from "src/prisma/prisma.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -15,6 +14,9 @@ import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
+import { CriaFunctionarioDTO } from "./dto/criaFuncionario";
+import { EmailService } from "src/email/email.service";
+
 @Injectable()
 export class GerenteService {
     
@@ -24,7 +26,8 @@ export class GerenteService {
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService,
                 private readonly contatoService: ContatoService,
-                private readonly eventoService: EventoService) {}
+                private readonly eventoService: EventoService,
+                private readonly emailService: EmailService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
@@ -173,34 +176,6 @@ export class GerenteService {
       return urls
     }
 
-    //rota para deletar foto da galeria
-    // async deletaGaleria(id: number, userId: number) {
-    //     const user = await this.userService.getUserById(userId);
-
-    //     if (!user || !user.id_estabelecimento) {
-    //         throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
-    //     }
-
-    //     const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
-
-    //     for (const item of galeria) {
-    //         if (item.id_gal === id) {
-
-    //           const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
-              
-    //           try {
-    //             fs.promises.unlink(path)
-    //           } catch (erro) {
-    //             console.error("Erro ao deletar arquivo:", erro);
-    //             throw new HttpException('Erro ao deletar arquivo', 500);
-    //           }
-    //           return await this.galeriaService.deletaGaleria(item.id_gal);
-    //         }
-    //     }
-
-    //     throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
-    // }
-
     //rota para deletar foto da galeria por nome
     async deletaGaleria(nomeFoto: string, userId: number) {
       const user = await this.userService.getUserById(userId);
@@ -348,5 +323,40 @@ export class GerenteService {
       if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
 
       return await this.eventoService.deletaEvento(eventId)
+    }
+
+    //rota para cadastrar funcionário
+    async cadastraFuncionario(data: CriaFunctionarioDTO, userId: number) {
+      const user = await this.userService.getUserByEmail(data.email);
+      const manager = await this.userService.getUserByEmail(data.email);
+
+      if(user) throw new HttpException('Usuário já cadastrado', 400);
+      if(!manager || !manager.id_estabelecimento || manager.status != Number(process.env.STATUS_VERIFICADO)) throw new HttpException('Não foi possivel cadastrar seu novo funcionário', 400);
+
+      const password = this.generateRandomPassword(10)
+      try {
+        this.emailService.sendNewEmployeeEmail(data.email, password, data.nome);
+      }catch (error) {
+        throw new HttpException('Erro ao enviar email para o novo funcionário', 500);
+      }
+
+      return await this.userService.createUser({
+        nome_usuario: data.nome,
+        email: data.email,
+        senha: password,
+        tipo: 'Funcionário',
+        id_estabelecimento: manager.id_estabelecimento,
+        status: Number(process.env.STATUS_CRIADO)
+      })
+    }
+
+    private generateRandomPassword(length: number): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+      let password = '';
+      for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * chars.length);
+          password += chars[randomIndex];
+      }
+      return password;
     }
 }
