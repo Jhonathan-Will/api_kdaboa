@@ -15,6 +15,7 @@ import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
+import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 
 @Controller("gerente")
 export class GerenteController {
@@ -202,7 +203,7 @@ export class GerenteController {
         }
     }
 
-    //rota para buscar estabelecimento
+    //rota para buscar contato do estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'busca pelos contatos do estabelecimento' })
     @Get('/contact')
@@ -431,6 +432,15 @@ export class GerenteController {
     async DeletaEvento(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.deletaEvento(req.user.sub, id))
+        }
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Rota para cadastrar funcionário'})
+    @Post('/employee')
+    async CadastraFuncionario(@Body() funcionario: CriaFunctionarioDTO, @Res() res: Response, @Req() req: any) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.cadastraFuncionario(funcionario, req.user.sub))
         }
     }
 }
