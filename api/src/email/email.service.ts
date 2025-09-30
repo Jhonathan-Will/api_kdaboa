@@ -80,4 +80,32 @@ export class EmailService {
             throw error;
         }
     }
+
+    async sendNewEmployeeEmail(email: string, password: string, nome: string) {
+        try {
+            let path = join(__dirname, "templates", "new-employee.ejs");
+            const templatePath = path.replace("dist", "src");
+            const html = await ejs.renderFile(templatePath, { password, nome });
+
+            path = join(__dirname, "templates", 'assets', 'download.webp');
+            const logoPath = path.replace("dist", "src");
+
+            await this.transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Recuperação de Senha",
+                text: `Bem-vindo! Sua senha inicial é: ${password}`,
+                html,
+                attachments: [{
+                        filename: 'logo.png',
+                        path: logoPath,
+                        cid: 'logo_cid'
+                    }]
+           
+            })
+        } catch (error) {
+            console.error("Error sending email: ", error);
+            throw error;
+        }
+    }
 }
