@@ -227,6 +227,10 @@ export class AuthService {
         );
     }
 
+    async updateUser(data:any, file:string, user:any){
+        return this.usersService.updateUser(user, {nome: data.nome, foto: file})
+    }
+
     private verificaDominio(email: string) {
         if (!process.env.ALLOWED_DOMAINS) {
             throw new HttpException(
