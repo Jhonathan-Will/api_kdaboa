@@ -1,13 +1,16 @@
-import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Response } from 'express'
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
+import { diskStorage } from 'multer';
 import { LoginDTO } from './dto/login.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { extname, join } from 'path';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -137,4 +140,32 @@ export class AuthController {
         return this.authService.pegarDados(req.user)
     }
 
+    @ApiOperation({ summary: 'Atualiza dados do usuário' })
+    @Put("update-user")
+    @UseInterceptors(FileInterceptor('image', {
+        storage: diskStorage({
+            destination: join(__dirname, "..", "..", "images", "profile").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname, "..", "..", "images", "events", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @UseGuards(RefreshGuard)
+    atualizarUsuario(@Body() body: any, @Req() req: any, @Res() res: Response){
+        return this.authService.updateUser(body, req.file.filename, req.user.sub);
+    }
 }
