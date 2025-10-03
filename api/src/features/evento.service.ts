@@ -104,9 +104,9 @@ export class EventoService {
         });
     }
 
-    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; date?: Date }) {
+    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; city?: string, date?: Date }) {
         try{
-            const { name, category, date } = filtros;
+            const { name, category, city, date } = filtros;
             return this.prisma.evento.findMany({
                 where: {
                     ...(name && { nome_evento: { contains: name } }),
@@ -119,6 +119,9 @@ export class EventoService {
                     ...(category && category.length > 0 && {
                     Evento_Categoria: {
                         some: { id_categoria: { in: category } }
+                    },
+                    Endereco: {
+                        ...(city && { cidade: city })
                     }
                 })
             },
