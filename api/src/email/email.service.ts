@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { getBaseUrl } from "src/common/base-url.util";
 import * as nodemailer from "nodemailer";
 import * as ejs from "ejs";
 import { join } from "path";
@@ -24,7 +25,7 @@ export class EmailService {
 
             let path = join(__dirname, "templates", "verification.ejs");
             const templatePath = path.replace("dist", "src");
-            const html = await ejs.renderFile(templatePath, { token, nome });
+            const html = await ejs.renderFile(templatePath, { token, nome, baseUrl: getBaseUrl() });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
             const logoPath = path.replace("dist", "src");
@@ -34,7 +35,7 @@ export class EmailService {
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: "Verificação de Email",
-                text: `Clique no link para verificar seu email: http://localhost:3000/email/verify?token=${token}`,
+                text: `Clique no link para verificar seu email: ${getBaseUrl()}/email/verify?token=${token}`,
                 html,
                 attachments: [
                     {
@@ -57,7 +58,7 @@ export class EmailService {
 
             let path = join(__dirname, "templates", "recovery-password.ejs");
             const templatePath = path.replace("dist", "src");
-            const html = await ejs.renderFile(templatePath, { token, nome });
+            const html = await ejs.renderFile(templatePath, { token, nome, baseUrl: getBaseUrl() });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
             const logoPath = path.replace("dist", "src");
@@ -66,7 +67,7 @@ export class EmailService {
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: "Recuperação de Senha",
-                text: `Clique no link para recuperar sua senha: http://localhost:3000/auth/recovery-password?token=${token}`,
+                text: `Clique no link para recuperar sua senha: ${getBaseUrl()}/auth/recovery-password?token=${token}`,
                 html,
                 attachments: [{
                         filename: 'logo.png',

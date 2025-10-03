@@ -1,4 +1,5 @@
 import { Injectable, HttpException } from "@nestjs/common";
+import { getBaseUrl } from "src/common/base-url.util";
 import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
@@ -168,7 +169,7 @@ export class GerenteService {
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui Estbalecimento vinculado a ele', 404)
 
       const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
-      const urls = imagens.map(image => `http://localhost:3000/gallery/${image.foto}`);
+  const urls = imagens.map(image => `${getBaseUrl()}/gallery/${image.foto}`);
 
       return urls
     }
@@ -302,7 +303,7 @@ export class GerenteService {
 
       return event.map(evento => ({
         ...evento,
-        foto: `http://localhost:3000/event/image/${evento.foto}`
+        foto: `${getBaseUrl()}/event/image/${evento.foto}`
       }));
 
       

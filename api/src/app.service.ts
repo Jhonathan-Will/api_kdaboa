@@ -3,6 +3,7 @@ import { join } from "path";
 import * as fs from 'fs';
 
 import { EventoService } from 'src/features/evento.service'
+import { getBaseUrl } from 'src/common/base-url.util'
 import { EstabelecimentoService } from "./features/estabelecimento.service";
 
 @Injectable()
@@ -37,13 +38,13 @@ export class AppService {
             const eventos = await this.eventoService.buscaTodosEventos()
             return eventos.map(evento => ({
                 ...evento,
-                foto: `http://localhost:3000/event/image/${evento.foto}` 
+                foto: `${getBaseUrl()}/event/image/${evento.foto}`
             }))
         }
         const eventos = await this.eventoService.buscaEventosFiltrados(filtros)
             return eventos.map(evento => ({
                 ...evento,
-                foto: `http://localhost:3000/event/image/${evento.foto}` 
+                foto: `${getBaseUrl()}/event/image/${evento.foto}`
             }))
     }
 
@@ -57,7 +58,7 @@ export class AppService {
                 ...estabelecimento,
                 Galeria: estabelecimento.Galeria.map(gal => ({
                     ...gal,
-                    foto: `http://localhost:3000/gallery/${gal.foto}`
+                    foto: `${getBaseUrl()}/gallery/${gal.foto}`
                 }))
             }
         } 
