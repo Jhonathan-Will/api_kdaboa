@@ -117,34 +117,36 @@ export class EventoService {
                         }
                     }),
                     ...(category && category.length > 0 && {
-                    Evento_Categoria: {
-                        some: { id_categoria: { in: category } }
-                    },
-                    Endereco: {
-                        ...(city && { cidade: city })
-                    }
-                })
-            },
-            include: {
-                Endereco: true,
-                Estabelecimento: {
-                    include: {
-                        Contato: true
-                    }
+                        Evento_Categoria: {
+                            some: { id_categoria: { in: category } }
+                        },
+                    }),
+                    ...(city && {
+                        Endereco: {
+                            cidade: { contains: city }
+                        }
+                    })
                 },
-                Evento_Categoria: {
-                    include: {
-                        Categoria: {
-                            select: {
-                                id_categoria: true,
-                                nome_categoria: true,
-                                icone: true
+                include: {
+                    Endereco: true,
+                    Estabelecimento: {
+                        include: {
+                            Contato: true
+                        }
+                    },
+                    Evento_Categoria: {
+                        include: {
+                            Categoria: {
+                                select: {
+                                    id_categoria: true,
+                                    nome_categoria: true,
+                                    icone: true
+                                }
                             }
                         }
-                    }
-                },
-            }
-        })
+                    },
+                }
+            })
 
         }catch(error){
         console.error('Erro em buscaEventosFiltrados:', error);
