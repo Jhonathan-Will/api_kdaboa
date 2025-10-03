@@ -56,7 +56,7 @@ export class GerenteService {
     }
 
     // Rota para alterar estabelecimento
-    async alteraEstabelecimento(dados: any, userId: number) {
+    async alteraEstabelecimento(dados: any, file: string, userId: number) {
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento || user.tipo !== 'Gerente' || user.id_estabelecimento !== dados.id) {
@@ -65,6 +65,11 @@ export class GerenteService {
 
       const id = dados.id
       delete dados.id;
+
+      dados ={
+        ...dados,
+        imagem: file,
+      }
 
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
