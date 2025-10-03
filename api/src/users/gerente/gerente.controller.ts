@@ -45,7 +45,29 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
     @Put("/establishment")
-    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any) {
+        @UseInterceptors(FileInterceptor('image', {
+        storage: diskStorage({
+            destination: join(__dirname, "..", "..", "images", "establishment").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname, "..", "..", "images", "establishment", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any, @Res() res: Response) {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
 
         if (!this.csrf.validateToken(csrfToken)) {
@@ -55,7 +77,7 @@ export class GerenteController {
             }, 405);
         }
 
-        this.gerenteService.alteraEstabelecimento(estabelecimento, req.user.sub)
+         res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, req.file.filename, req.user.sub));
     }
 
     //rota para cadastrar endereço
