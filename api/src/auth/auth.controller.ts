@@ -151,7 +151,7 @@ export class AuthController {
                 const extension = extname(file.originalname);
 
                 const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "events", fileName).replace("dist", "src");
+                const filePath = join(__dirname, "..", "..", "images", "profile", fileName).replace("dist", "src");
                 const fs = require('fs');
                 if (fs.existsSync(filePath)) {
                     const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
