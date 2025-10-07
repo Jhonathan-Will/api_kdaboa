@@ -62,8 +62,10 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 src/images/gallery/*
 src/images/profile/*
 src/images/events/*
+src/images/establishment/*
 
 # Mantém o diretório, mas ignora os arquivos dentro dele
 !src/images/gallery/.gitkeep
 !src/images/profile/.gitkeep
 !src/images/event/.gitkepp
+!src/images/establishment/.gitkeep
