@@ -70,7 +70,7 @@ export class GerenteService {
         ...dados,
         imagem: file,
       }
-
+      console.log(dados)
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
 

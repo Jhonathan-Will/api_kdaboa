@@ -41,7 +41,8 @@ export class EstabelecimentoService {
                 createMany: {
                     data: data.categoria.map((categoriaId: number) => ({ id_categoria: categoriaId }))
                 }
-            }}) 
+            }}),
+            ...(data.imagem && { imagem: data.imagem })
         };
 
         return this.prisma.estabelecimento.update({
