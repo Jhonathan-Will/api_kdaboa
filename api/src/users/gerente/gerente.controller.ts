@@ -45,7 +45,7 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
     @Put("/establishment")
-        @UseInterceptors(FileInterceptor('image', {
+    @UseInterceptors(FileInterceptor('image', {
         storage: diskStorage({
             destination: join(__dirname, "..", "..", "images", "establishment").replace("dist", "src"),
             filename: (req, file, cb) => {
@@ -66,6 +66,39 @@ export class GerenteController {
             }
         })
     }))
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                id:{
+                    type: "integer",
+                    example: 1,
+                    format: 'number',
+                },
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                nome: {
+                    type: 'string',
+                    example: "Nome do estabelecimento",
+                    format: 'text',
+                },
+                descricao: {
+                    type: 'string',
+                    example: "Descrição do estabelecimento",
+                    format: 'text',
+                },
+                categoria: {
+                    type: 'array',
+                    items: { type: 'number', example: 1 },
+                    example: [1, 2, 3],
+                    description: 'Categorias do estabelecimento, representada por um array de números',
+
+                }
+            },
+        },
+    })
     @ApiConsumes('multipart/form-data')
     AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any, @Res() res: Response) {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
@@ -76,8 +109,7 @@ export class GerenteController {
                 error: 'Token CSRF inválido'
             }, 405);
         }
-
-         res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, req.file.filename, req.user.sub));
+        res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, req.file.filename, req.user.sub));
     }
 
     //rota para cadastrar endereço
