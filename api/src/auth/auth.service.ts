@@ -242,7 +242,6 @@ export class AuthService {
         return !dominiosPermitidos.includes(dominioEmail);
     }
 
-
     //rota para cadastrar funcionário
     async cadastraFuncionario(data: CriaFunctionarioDTO, userId: number) {
         const user = await this.usersService.getUserByEmail(data.email);
@@ -283,7 +282,7 @@ export class AuthService {
     }
 
     private generateRandomPassword(length: number): string {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&_-';
       let password = '';
       for (let i = 0; i < length; i++) {
           const randomIndex = Math.floor(Math.random() * chars.length);
@@ -291,7 +290,6 @@ export class AuthService {
       }
       return password;
     }
-
 
     async pegarDados(token: string){
         return token
