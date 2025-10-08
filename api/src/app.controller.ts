@@ -22,7 +22,7 @@ export class  AppController {
 
     //rota para buscar foto do estabelecimento
     @ApiOperation({summary: 'busca pela foto do estabelecimento'})
-    @Get('/establisment/image/:name')
+    @Get('/establishment/image/:name')
     async BuscaFotoEstabelecimento(@Param('name') name: string, @Res() res: Response) {
         res.sendFile(await this.appService.buscaFotoEstabelcimento(name));
     }
