@@ -11,6 +11,15 @@ export class AppService {
                 private readonly estabelecimentoService: EstabelecimentoService
     ) { }
 
+    //rota para buscar foto do usuario
+    async buscaFotoUsuario(name: string): Promise<string> {
+        const path = join(__dirname, "images", "profile", name).replace("dist", "src");
+
+        if (!fs.existsSync(path)) throw new HttpException('Imagem não encontrada', 404);
+
+        return path
+    }
+
     //rota para buscar foto do estbalecimento
     async buscaFotoEstabelcimento(name: string): Promise<string> {
         const path = join(__dirname, "images", "establishment", name).replace("dist", "src");
