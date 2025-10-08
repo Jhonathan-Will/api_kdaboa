@@ -137,7 +137,7 @@ export class AuthController {
     @Get("dados")
     @UseGuards(RefreshGuard) 
     pegarDados(@Req() req: any){
-        return this.authService.pegarDados(req.user)
+        return this.authService.pegarDados(req.user.sub)
     }
 
     @ApiOperation({ summary: 'Atualiza dados do usuário' })

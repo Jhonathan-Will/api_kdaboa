@@ -245,9 +245,16 @@ export class AuthService {
         return !dominiosPermitidos.includes(dominioEmail);
     }
 
+    async pegarDados(id: number){
+        const user = await this.usersService.getUserById(id);
 
-    async pegarDados(token: string){
-        return token
+        if (user) {
+            user.foto = `http://localhost:3000/user/image/${user.foto}`
+            user.senha = '********';
+            return user;
+        }
+
+        return user;
     }
 
 }
