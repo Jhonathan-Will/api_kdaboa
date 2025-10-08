@@ -52,12 +52,13 @@ export class GerenteService {
 
       if(!user || user.id_estabelecimento == undefined || user.id_estabelecimento == null) throw new HttpException("usuário não possui estabelecimento vinculado a ele", 404)
       
-      await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento).then(response => {
-        if (response) {
-          response.imagem = `http://localhost:3000/establishment/image/${response.imagem}`;
-        }
-        return response;
-      });
+      const establishment = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+
+      if (establishment) {
+          establishment.imagem = `http://localhost:3000/establishment/image/${establishment.imagem}`;
+      }
+
+      return establishment;
     }
 
     // Rota para alterar estabelecimento
@@ -208,7 +209,7 @@ export class GerenteService {
       }
   
       return await this.galeriaService.deletaGaleria(imagem.id_gal);
-  }
+    }
   
     // rota para criar contato
     async cadastaContato(data: any, userId: number) {
