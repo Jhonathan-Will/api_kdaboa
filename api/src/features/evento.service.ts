@@ -34,7 +34,27 @@ export class EventoService {
     }
     
     async buscaTodosEventos() {
-        return await this.prisma.evento.findMany()
+        return await this.prisma.evento.findMany({
+            include: {
+                Estabelecimento: {
+                    select: {
+                        imagem: true,
+                    }
+                },
+                Endereco: true,
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     async buscaPorEstabelecimento(id_est: number) {
@@ -89,9 +109,9 @@ export class EventoService {
         });
     }
 
-    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; date?: Date }) {
+    async buscaEventosFiltrados(filtros: { name?: string; category?: number[]; city?: string, date?: Date }) {
         try{
-            const { name, category, date } = filtros;
+            const { name, category, city, date } = filtros;
             return this.prisma.evento.findMany({
                 where: {
                     ...(name && { nome_evento: { contains: name } }),
@@ -102,31 +122,36 @@ export class EventoService {
                         }
                     }),
                     ...(category && category.length > 0 && {
-                    Evento_Categoria: {
-                        some: { id_categoria: { in: category } }
-                    }
-                })
-            },
-            include: {
-                Endereco: true,
-                Estabelecimento: {
-                    include: {
-                        Contato: true
-                    }
+                        Evento_Categoria: {
+                            some: { id_categoria: { in: category } }
+                        },
+                    }),
+                    ...(city && {
+                        Endereco: {
+                            cidade: { contains: city }
+                        }
+                    })
                 },
-                Evento_Categoria: {
-                    include: {
-                        Categoria: {
-                            select: {
-                                id_categoria: true,
-                                nome_categoria: true,
-                                icone: true
+                include: {
+                    Endereco: true,
+                    Estabelecimento: {
+                        include: {
+                            Contato: true
+                        }
+                    },
+                    Evento_Categoria: {
+                        include: {
+                            Categoria: {
+                                select: {
+                                    id_categoria: true,
+                                    nome_categoria: true,
+                                    icone: true
+                                }
                             }
                         }
-                    }
-                },
-            }
-        })
+                    },
+                }
+            })
 
         }catch(error){
         console.error('Erro em buscaEventosFiltrados:', error);

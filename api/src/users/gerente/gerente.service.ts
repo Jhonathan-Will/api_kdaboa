@@ -3,7 +3,6 @@ import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
 import { CsrfService } from "src/security/csrf/csrf.service";
-import { PrismaService } from "src/prisma/prisma.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -53,11 +52,17 @@ export class GerenteService {
 
       if(!user || user.id_estabelecimento == undefined || user.id_estabelecimento == null) throw new HttpException("usuário não possui estabelecimento vinculado a ele", 404)
       
-      return await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+      const establishment = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+
+      if (establishment) {
+          establishment.imagem = `http://localhost:3000/establishment/image/${establishment.imagem}`;
+      }
+
+      return establishment;
     }
 
     // Rota para alterar estabelecimento
-    async alteraEstabelecimento(dados: any, userId: number) {
+    async alteraEstabelecimento(dados: any, file: string, userId: number) {
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento || user.tipo !== 'Gerente' || user.id_estabelecimento !== dados.id) {
@@ -67,6 +72,11 @@ export class GerenteService {
       const id = dados.id
       delete dados.id;
 
+      dados ={
+        ...dados,
+        imagem: file,
+      }
+      
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
 
@@ -173,34 +183,6 @@ export class GerenteService {
       return urls
     }
 
-    //rota para deletar foto da galeria
-    // async deletaGaleria(id: number, userId: number) {
-    //     const user = await this.userService.getUserById(userId);
-
-    //     if (!user || !user.id_estabelecimento) {
-    //         throw new HttpException('Usuário não encontrado ou não possui estabelecimento vinculado', 404);
-    //     }
-
-    //     const galeria = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento);
-
-    //     for (const item of galeria) {
-    //         if (item.id_gal === id) {
-
-    //           const path = join(__dirname,"..","..","images","gallery", item.foto).replace("dist", "src");
-              
-    //           try {
-    //             fs.promises.unlink(path)
-    //           } catch (erro) {
-    //             console.error("Erro ao deletar arquivo:", erro);
-    //             throw new HttpException('Erro ao deletar arquivo', 500);
-    //           }
-    //           return await this.galeriaService.deletaGaleria(item.id_gal);
-    //         }
-    //     }
-
-    //     throw new HttpException('Galeria não encontrada para este estabelecimento', 404);
-    // }
-
     //rota para deletar foto da galeria por nome
     async deletaGaleria(nomeFoto: string, userId: number) {
       const user = await this.userService.getUserById(userId);
@@ -227,7 +209,7 @@ export class GerenteService {
       }
   
       return await this.galeriaService.deletaGaleria(imagem.id_gal);
-  }
+    }
   
     // rota para criar contato
     async cadastaContato(data: any, userId: number) {
@@ -278,7 +260,6 @@ export class GerenteService {
 
     //rota para cadastrar evento
     async cadastraEvento(data: CriarEventoDTO, userId: number, file: string): Promise<EventoDTO>  {
-      console.log(file)
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {
@@ -288,7 +269,7 @@ export class GerenteService {
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
 
       if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
-      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , file)
+      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, Number(process.env.EVENT_STATUS_CRIADO), file)
      
     }
 

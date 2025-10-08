@@ -13,6 +13,20 @@ export class  AppController {
         return { url: '/api' };
     }
 
+    //rota para buscar foto do usuario
+    @ApiOperation({summary: 'busca pela foto do usuario'})
+    @Get('/user/image/:name')
+    async BuscaFotoUsuario(@Param('name') name: string, @Res() res: Response) {
+        res.sendFile(await this.appService.buscaFotoUsuario(name));
+    }
+
+    //rota para buscar foto do estabelecimento
+    @ApiOperation({summary: 'busca pela foto do estabelecimento'})
+    @Get('/establishment/image/:name')
+    async BuscaFotoEstabelecimento(@Param('name') name: string, @Res() res: Response) {
+        res.sendFile(await this.appService.buscaFotoEstabelcimento(name));
+    }
+
     //rota para buscar uma foto da galeira
     @ApiOperation({summary: 'Busca por uma foto da galeira'})
     @Get('/gallery/:name')
@@ -20,8 +34,6 @@ export class  AppController {
         res.sendFile(await this.appService.buscaFotoGaleria(name))
     }
    
-
-
     //rota para buscar foto de evento
     @ApiOperation({summary: 'busca pela foto do estabelecimento'})
     @Get('/event/image/:name')
@@ -40,11 +52,13 @@ export class  AppController {
     @ApiOperation({summary: 'busca todos os eventos'})
     @ApiQuery({ name: 'name', required: false, description: 'Parte do nome do evento' })
     @ApiQuery({ name: 'category', required: false, description: 'ID da categoria', type: Number })
+    @ApiQuery({ name: 'city', required: false, description: 'Cidade do evento', type: String})
     @ApiQuery({ name: 'date', required: false, description: 'Data do evento (YYYY-MM-DD)', type: String })
     @Get('/event')
     async BuscaEventosFiltrados(@Res() res: Response,
                                 @Query('name') name?: string,
                                 @Query('category') category?: string[] | string,
+                                @Query('city') city?: string,
                                 @Query('date') date?: string) {
         let categories: number[] = [];
         if (Array.isArray(category)) {
@@ -56,9 +70,10 @@ export class  AppController {
         }
         const [day,month, year] = date? date.split('/'): [undefined, undefined, undefined];
 
-        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, date: !date ? undefined : new Date(`${year}-${month}-${day}T00:00:00.000Z`)}))
+        res.status(HttpStatus.OK).json(await this.appService.filtraEvento({name, category: categories, city, date: !date ? undefined : new Date(`${year}-${month}-${day}T00:00:00.000Z`)}))
     }
 
+    //rota para buscar estabelecimento pelo id
     @ApiOperation({summary: 'busca pelo estabelecimento'})
     @Get("/estableshiment/:id")
     async buscaEstabelecimento(@Param('id') id: number, @Res() res: Response) {
