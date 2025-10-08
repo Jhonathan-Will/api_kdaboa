@@ -228,7 +228,7 @@ export class AuthService {
     }
 
     async updateUser(data:any, file:string, user:any){
-        return this.usersService.updateUser(user, {nome: data.nome, foto: file})
+        return this.usersService.updateUser(user, {nome_usuario: data.nome, foto: file})
     }
 
     private verificaDominio(email: string) {

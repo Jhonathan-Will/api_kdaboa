@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Response } from 'express'
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
@@ -144,7 +144,7 @@ export class AuthController {
     @Put("update-user")
     @UseInterceptors(FileInterceptor('image', {
         storage: diskStorage({
-            destination: join(__dirname, "..", "..", "images", "profile").replace("dist", "src"),
+            destination: join(__dirname, "..", "images", "profile").replace("dist", "src"),
             filename: (req, file, cb) => {
                 const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
                 const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
@@ -163,9 +163,24 @@ export class AuthController {
             }
         })
     }))
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                nome: {
+                    type: 'string',
+                    example: 'Nome do usuário'
+                },
+            }, 
+        },
+    })
     @ApiConsumes('multipart/form-data')
     @UseGuards(RefreshGuard)
     atualizarUsuario(@Body() body: any, @Req() req: any, @Res() res: Response){
-        return this.authService.updateUser(body, req.file.filename, req.user.sub);
+        return res.status(HttpStatus.OK).json(this.authService.updateUser(body, req.file.filename, req.user.sub));
     }
 }
