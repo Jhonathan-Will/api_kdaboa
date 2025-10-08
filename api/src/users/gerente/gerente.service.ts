@@ -52,7 +52,12 @@ export class GerenteService {
 
       if(!user || user.id_estabelecimento == undefined || user.id_estabelecimento == null) throw new HttpException("usuário não possui estabelecimento vinculado a ele", 404)
       
-      return await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+      await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento).then(response => {
+        if (response) {
+          response.imagem = `http://localhost:3000/establishment/image/${response.imagem}`;
+        }
+        return response;
+      });
     }
 
     // Rota para alterar estabelecimento
@@ -70,7 +75,7 @@ export class GerenteService {
         ...dados,
         imagem: file,
       }
-      console.log(dados)
+      
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
 

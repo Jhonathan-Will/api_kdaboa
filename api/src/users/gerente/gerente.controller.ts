@@ -303,11 +303,6 @@ export class GerenteController {
                     example: 'Uma festa incrível para celebrar meu aniversário',
                     description: 'Descrição do evento'
                 },
-                data_criacao: {
-                    type: 'string',
-                    example: '2023-10-01T12:00:00Z',
-                    description: 'Data de criação do evento'
-                },
                 data_inicio: {
                     type: 'string',
                     example: '2023-10-15T18:00:00Z',
@@ -334,7 +329,6 @@ export class GerenteController {
                 'images',
                 'nome',
                 'descricao',
-                'data_criacao',
                 'data_inicio',
                 'data_fim',
                 'id_endereco',
