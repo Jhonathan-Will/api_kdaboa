@@ -1,18 +1,22 @@
-import { Body, Controller, Get, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express'
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
+import { CsrfService } from 'src/security/csrf/csrf.service';
 import { LoginDTO } from './dto/login.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
+import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService,
+                private readonly csrf: CsrfService
+    ) {}
 
     //Rotas de Cadastro e Login
     @ApiOperation({ summary: 'Cadastra gerente' })
@@ -133,6 +137,15 @@ export class AuthController {
         });
     }
 
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Rota para cadastrar funcionário'})
+    @Post('/employee')
+    async CadastraFuncionario(@Body() funcionario: CriaFunctionarioDTO, @Res() res: Response, @Req() req: any) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.authService.cadastraFuncionario(funcionario, req.user.sub))
+        }
+    }
 
     @Get("dados")
     @UseGuards(RefreshGuard) 

@@ -10,12 +10,10 @@ import { extname, join } from 'path';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
-import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
-import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 
 @Controller("gerente")
 export class GerenteController {
@@ -435,12 +433,4 @@ export class GerenteController {
         }
     }
 
-    @UseGuards(RefreshGuard)
-    @ApiOperation({summary: 'Rota para cadastrar funcionário'})
-    @Post('/employee')
-    async CadastraFuncionario(@Body() funcionario: CriaFunctionarioDTO, @Res() res: Response, @Req() req: any) {
-        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
-            res.status(HttpStatus.OK).json(await this.gerenteService.cadastraFuncionario(funcionario, req.user.sub))
-        }
-    }
 }

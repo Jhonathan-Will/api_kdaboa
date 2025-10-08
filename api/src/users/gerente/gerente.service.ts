@@ -2,7 +2,6 @@ import { Injectable, HttpException } from "@nestjs/common";
 import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
-import { CsrfService } from "src/security/csrf/csrf.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -14,20 +13,16 @@ import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
-import { CriaFunctionarioDTO } from "./dto/criaFuncionario";
-import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class GerenteService {
     
     constructor(private readonly userService: UsersService,
-                private readonly csrf: CsrfService,
                 private readonly enderecoService: EnderecoService,
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService,
                 private readonly contatoService: ContatoService,
-                private readonly eventoService: EventoService,
-                private readonly emailService: EmailService) {}
+                private readonly eventoService: EventoService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
@@ -323,40 +318,5 @@ export class GerenteService {
       if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
 
       return await this.eventoService.deletaEvento(eventId)
-    }
-
-    //rota para cadastrar funcionário
-    async cadastraFuncionario(data: CriaFunctionarioDTO, userId: number) {
-      const user = await this.userService.getUserByEmail(data.email);
-      const manager = await this.userService.getUserByEmail(data.email);
-
-      if(user) throw new HttpException('Usuário já cadastrado', 400);
-      if(!manager || !manager.id_estabelecimento || manager.status != Number(process.env.STATUS_VERIFICADO)) throw new HttpException('Não foi possivel cadastrar seu novo funcionário', 400);
-
-      const password = this.generateRandomPassword(10)
-      try {
-        this.emailService.sendNewEmployeeEmail(data.email, password, data.nome);
-      }catch (error) {
-        throw new HttpException('Erro ao enviar email para o novo funcionário', 500);
-      }
-
-      return await this.userService.createUser({
-        nome_usuario: data.nome,
-        email: data.email,
-        senha: password,
-        tipo: 'Funcionário',
-        id_estabelecimento: manager.id_estabelecimento,
-        status: Number(process.env.STATUS_CRIADO)
-      })
-    }
-
-    private generateRandomPassword(length: number): string {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
-      let password = '';
-      for (let i = 0; i < length; i++) {
-          const randomIndex = Math.floor(Math.random() * chars.length);
-          password += chars[randomIndex];
-      }
-      return password;
     }
 }
