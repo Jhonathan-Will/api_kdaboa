@@ -13,6 +13,13 @@ export class  AppController {
         return { url: '/api' };
     }
 
+    //rota para buscar foto do estabelecimento
+    @ApiOperation({summary: 'busca pela foto do estabelecimento'})
+    @Get('/establisment/image/:name')
+    async BuscaFotoEstabelecimento(@Param('name') name: string, @Res() res: Response) {
+        res.sendFile(await this.appService.buscaFotoEstabelcimento(name));
+    }
+
     //rota para buscar uma foto da galeira
     @ApiOperation({summary: 'Busca por uma foto da galeira'})
     @Get('/gallery/:name')
