@@ -1,14 +1,17 @@
-import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express'
+import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Response } from 'express';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
+import { diskStorage } from 'multer';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { LoginDTO } from './dto/login.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { extname, join } from 'path';
 import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 
 @ApiTags('auth')
@@ -27,10 +30,7 @@ export class AuthController {
     @Post("singin")
     async createGerente(@Body() gerente: CriarGereneteDTO) {
         try {
-            // lógica aqui
-            return await this.authService.singIn(gerente).catch((error) => {
-                console.log(error)
-            });
+            return await this.authService.singIn(gerente)
         } catch (err) {
             console.error('Erro no signin:', err);
 
@@ -137,7 +137,6 @@ export class AuthController {
         });
     }
 
-
     @UseGuards(RefreshGuard)
     @ApiOperation({summary: 'Rota para cadastrar funcionário'})
     @Post('/employee')
@@ -150,7 +149,50 @@ export class AuthController {
     @Get("dados")
     @UseGuards(RefreshGuard) 
     pegarDados(@Req() req: any){
-        return this.authService.pegarDados(req.user)
+        return this.authService.pegarDados(req.user.sub)
     }
 
+    @ApiOperation({ summary: 'Atualiza dados do usuário' })
+    @Put("update-user")
+    @UseInterceptors(FileInterceptor('image', {
+        storage: diskStorage({
+            destination: join(__dirname, "..", "images", "profile").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname, "..", "..", "images", "profile", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                nome: {
+                    type: 'string',
+                    example: 'Nome do usuário'
+                },
+            }, 
+        },
+    })
+    @ApiConsumes('multipart/form-data')
+    @UseGuards(RefreshGuard)
+    atualizarUsuario(@Body() body: any, @Req() req: any, @Res() res: Response){
+        return res.status(HttpStatus.OK).json(this.authService.updateUser(body, req.file.filename, req.user.sub));
+    }
 }

@@ -16,6 +16,7 @@ export class EstabelecimentoService {
                     nome: data.nome,
                     cnpj: data.cnpj,
                     descricao: data.descricao,
+                    status: Number(process.env.ESTABLISHIMENT_STATUS_DEFAULT),
                     Estabelecimento_Categoria: {
                         createMany: {
                             data: data.categoria.map((categoriaId: number) => ({ id_categoria: categoriaId }))
@@ -40,7 +41,8 @@ export class EstabelecimentoService {
                 createMany: {
                     data: data.categoria.map((categoriaId: number) => ({ id_categoria: categoriaId }))
                 }
-            }}) 
+            }}),
+            ...(data.imagem && { imagem: data.imagem })
         };
 
         return this.prisma.estabelecimento.update({

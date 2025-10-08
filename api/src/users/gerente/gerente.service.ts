@@ -2,6 +2,7 @@ import { Injectable, HttpException } from "@nestjs/common";
 import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
+import { CsrfService } from "src/security/csrf/csrf.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -51,11 +52,17 @@ export class GerenteService {
 
       if(!user || user.id_estabelecimento == undefined || user.id_estabelecimento == null) throw new HttpException("usuário não possui estabelecimento vinculado a ele", 404)
       
-      return await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+      const establishment = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
+
+      if (establishment) {
+          establishment.imagem = `http://localhost:3000/establishment/image/${establishment.imagem}`;
+      }
+
+      return establishment;
     }
 
     // Rota para alterar estabelecimento
-    async alteraEstabelecimento(dados: any, userId: number) {
+    async alteraEstabelecimento(dados: any, file: string, userId: number) {
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento || user.tipo !== 'Gerente' || user.id_estabelecimento !== dados.id) {
@@ -65,6 +72,11 @@ export class GerenteService {
       const id = dados.id
       delete dados.id;
 
+      dados ={
+        ...dados,
+        imagem: file,
+      }
+      
       return await this.estabelecimentoService.alteraEstabelecimento(id, dados)
     }
 
@@ -197,7 +209,7 @@ export class GerenteService {
       }
   
       return await this.galeriaService.deletaGaleria(imagem.id_gal);
-  }
+    }
   
     // rota para criar contato
     async cadastaContato(data: any, userId: number) {
@@ -248,7 +260,6 @@ export class GerenteService {
 
     //rota para cadastrar evento
     async cadastraEvento(data: CriarEventoDTO, userId: number, file: string): Promise<EventoDTO>  {
-      console.log(file)
       const user = await this.userService.getUserById(userId);
 
       if (!user || !user.id_estabelecimento) {
@@ -258,7 +269,7 @@ export class GerenteService {
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
 
       if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
-      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, 1 , file)
+      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, Number(process.env.EVENT_STATUS_CRIADO), file)
      
     }
 

@@ -62,8 +62,19 @@ para melhor entendimento segue a [descrição de todas as pastas](./STRUCTURE.md
    - O prisma já carrega o banco de dados automaticamente, só precisamos configuar sua relação com ele na nossa maquina. Para isso vamos escrever algumas coisas dento do .env que criamos
      ```.env
      DATABASE_URL="mysql://<seu_nome_de_usuario_do_banco>:<sua_senha_para_acessar_o_banco>@localhost:3306/<nome_do_banco>
+     
      STATUS_VERIFICADO="<qualquer numero>"
      STATUS_CRIADO="<qualquer numero>"
+     STATUS_BLOQUEADO="<qualquer numero>"
+     
+     EVENT_STATUS_CRIADO="<qualquer numero>"
+     EVENT_STATUS_FINALIZADO="<qualquer numero>"
+     EVENT_STATUS_CANCELADO="<qualquer numero>"
+     EVENT_STATUS_PENDENTE="<qualquer numero>"
+      
+     ESTABLISHIMENT_STATUS_DEFAULT="<qualquer numero>"
+     ESTABLISHIMENT_STATUS_VERIFICADO="<qualquer numero>"
+     ESTABLISHIMENT_STATUS_BLOQUEADO="<qualquer numero>"
      ```
 
    - O DATABASE_URL é o link que o prisma usa para acessar seu banco de dados, para melhor entendimento [clique aqui](https://www.prisma.io/docs/getting-started/setup-prisma/start-from-scratch/relational-databases/connect-your-database-typescript-mysql)

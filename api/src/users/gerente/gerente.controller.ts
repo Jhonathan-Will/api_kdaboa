@@ -44,7 +44,62 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
     @Put("/establishment")
-    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any) {
+    @UseInterceptors(FileInterceptor('image', {
+        storage: diskStorage({
+            destination: join(__dirname, "..", "..", "images", "establishment").replace("dist", "src"),
+            filename: (req, file, cb) => {
+                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
+                const extension = extname(file.originalname);
+
+                const fileName = `${uniqueSuffix}`;
+                const filePath = join(__dirname, "..", "..", "images", "establishment", fileName).replace("dist", "src");
+                const fs = require('fs');
+                if (fs.existsSync(filePath)) {
+                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
+                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
+                    cb(null, `${newUniqueSuffix}${extension}`);
+                } else {
+                    cb(null, `${uniqueSuffix}${extension}`);
+                }
+            }
+        })
+    }))
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                id:{
+                    type: "integer",
+                    example: 1,
+                    format: 'number',
+                },
+                image: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                nome: {
+                    type: 'string',
+                    example: "Nome do estabelecimento",
+                    format: 'text',
+                },
+                descricao: {
+                    type: 'string',
+                    example: "Descrição do estabelecimento",
+                    format: 'text',
+                },
+                categoria: {
+                    type: 'array',
+                    items: { type: 'number', example: 1 },
+                    example: [1, 2, 3],
+                    description: 'Categorias do estabelecimento, representada por um array de números',
+
+                }
+            },
+        },
+    })
+    @ApiConsumes('multipart/form-data')
+    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any, @Res() res: Response) {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
 
         if (!this.csrf.validateToken(csrfToken)) {
@@ -53,8 +108,7 @@ export class GerenteController {
                 error: 'Token CSRF inválido'
             }, 405);
         }
-
-        this.gerenteService.alteraEstabelecimento(estabelecimento, req.user.sub)
+        res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, req.file.filename, req.user.sub));
     }
 
     //rota para cadastrar endereço
@@ -248,11 +302,6 @@ export class GerenteController {
                     example: 'Uma festa incrível para celebrar meu aniversário',
                     description: 'Descrição do evento'
                 },
-                data_criacao: {
-                    type: 'string',
-                    example: '2023-10-01T12:00:00Z',
-                    description: 'Data de criação do evento'
-                },
                 data_inicio: {
                     type: 'string',
                     example: '2023-10-15T18:00:00Z',
@@ -279,7 +328,6 @@ export class GerenteController {
                 'images',
                 'nome',
                 'descricao',
-                'data_criacao',
                 'data_inicio',
                 'data_fim',
                 'id_endereco',

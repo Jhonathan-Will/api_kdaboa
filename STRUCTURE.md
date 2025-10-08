@@ -9,13 +9,15 @@ api
 │  ├ auth
 │  ├ common
 │  ├ email
+│  ├ features
+│  ├ images
+│  ├ prisma
 │  ├ prisma
 │  ├ security
 │  │  ├ csrf
 │  │  └ jwt
-│  ├ users
-│  │  └ gerente    
-│  └ prisma
+│  └ users
+│     └ gerente
 └ test
 ```
 
@@ -26,13 +28,19 @@ Tudo que está dentro de `/src` representa uma funcionalidade específica do sis
 ## 🔍 Objetivo de cada pasta
 
 - **auth**  
-  Rota responsável por login e cadastro. Tudo que for relacionado à autenticação entra aqui.
+  Rota responsável por login e cadastro. Tudo que for relacionado à autenticação e dados do usuário entra aqui.
 
 - **common**  
   Contém o filtro de erro global. Qualquer erro que acontecer no sistema passa por aqui e é formatado para facilitar o entendimento.
 
 - **email**  
   Guarda as funções de envio de e-mail. Qualquer rota que precisar enviar e-mails pode usar os arquivos dessa pasta.
+
+- **features**
+  Guarda todos os services das funçãos de cada parte do projeto, como evento, estabalecimento, etc...
+
+- **images**
+  Responsavel por armazenar onde todas as foto utilizadas pelos usuarios, como foto de perfil e galeria. 
 
 - **prisma (dentro de src)**  
   Contém o service que integra o Prisma ao NestJS. Sempre que for usar Prisma dentro de alguma funcionalidade, essa é a pasta onde ele está implementado.
