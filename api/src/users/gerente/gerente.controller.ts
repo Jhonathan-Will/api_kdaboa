@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseIntercep
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
-import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
