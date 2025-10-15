@@ -118,7 +118,9 @@ export class AuthService {
                 return {
                     access_token: this.jwtService.sign(payload, {expiresIn: '1min'}),
                     csrfToken,
-                    refresh_token: this.jwtService.sign(refresh_token)
+                    refresh_token: this.jwtService.sign(refresh_token),
+                    isManager: usuario.tipo === 'Gerente' ? true : false,
+                    type: usuario.status
                 };
             } else {
                 throw new HttpException(
@@ -201,7 +203,7 @@ export class AuthService {
             const usuario = await this.usersService.getUserByEmail(user.email);
 
             if (usuario) {
-                if (usuario.status === Number(process.env.STATUS_CRIADO)) {
+                if (usuario.status === Number(process.env.STATUS_CRIADO) && usuario.tipo === 'Gerente') {
                     throw new HttpException(
                         { status: 400, error: "Email não verificado" },
                         400,
@@ -209,7 +211,8 @@ export class AuthService {
                 }
 
                 const sal = await bcrypt.genSalt(10);
-                const data = {senha: await bcrypt.hash(novaSenha.senha, sal)}
+                const data = {  senha: await bcrypt.hash(novaSenha.senha, sal),
+                                status : usuario.tipo === 'Funcionario' ? Number(process.env.STATUS_VERIFICADO) : usuario.status}
 
                 await this.usersService.updateUser(usuario.id_usuario, data);
 
@@ -256,16 +259,15 @@ export class AuthService {
 
         const usersByEstablishment = await this.usersService.getUsersByEstablishment(manager.id_estabelecimento)
 
-        console.log(usersByEstablishment)
-        console.log(usersByEstablishment.length)
         if(usersByEstablishment.length >= Number(process.env.LIMITE_FUNCIONARIOS)) throw new HttpException('Limite de funcionários atingido', 400);
 
         const password = this.generateRandomPassword(10)
+        const hashPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
 
         await this.usersService.createUser({
             nome_usuario: data.nome,
             email: data.email,
-            senha: password,
+            senha: hashPassword,
             tipo: 'Funcionario',
             id_estabelecimento: manager.id_estabelecimento,
             status: Number(process.env.STATUS_CRIADO)
