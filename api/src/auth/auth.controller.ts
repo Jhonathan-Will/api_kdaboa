@@ -59,7 +59,12 @@ export class AuthController {
                                                                 secure: true,
                                                                 sameSite: 'lax',
                                                                 path:'/'})
-            res.send({message: 'login feito com sucesso'})
+
+            if(!response.isManager && response.type === Number(process.env.STATUS_CRIADO)) {
+                res.status(HttpStatus.FOUND).json({redirect : `${process.env.FRONTEND_URL}/alterar-senha`})
+            }else{
+                res.send({message: 'login feito com sucesso'})
+            }
         }).catch((error) => {
             console.log(error)
             throw error
