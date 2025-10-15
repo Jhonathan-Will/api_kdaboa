@@ -313,7 +313,6 @@ export class GerenteService {
       await this.eventoService.alteraEvento(data, file, eventId).then(response => {
         return response
       }).catch(error => {
-                    console.log('aaaaaaaaaaa')
         console.log(error)
       })
     }
@@ -330,4 +329,22 @@ export class GerenteService {
 
       return await this.eventoService.deletaEvento(eventId)
     }
+
+    //rota para buscar funcionario
+    async buscaFuncionario(userId: number) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      const funcionarios = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento)
+
+      if(!funcionarios || funcionarios.length === 0) return []
+
+      return funcionarios.map(funcionario => ({
+          ...funcionario,
+          senha: undefined,
+          foto: `http://localhost:3000/user/image/${funcionario.foto}`
+      }))
+    }
+
 }
