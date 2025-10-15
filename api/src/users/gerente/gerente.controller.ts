@@ -500,4 +500,14 @@ export class GerenteController {
             res.status(HttpStatus.OK).json(await this.gerenteService.bloqueiaDesbloqueiaFuncionario(req.user.sub, id))
         }
     }
+
+    //rota para excluir funcionario
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Exclui um funcionário' })
+    @Delete('/employee/:id')
+    async ExcluirFuncionario(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.excluirFuncionario(req.user.sub, id))
+        }
+    }
 }
