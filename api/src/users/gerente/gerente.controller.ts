@@ -491,4 +491,13 @@ export class GerenteController {
         }
     }
 
+    //rota para bloquear e desbloquear funcionario
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Bloqueia ou desbloqueia um funcionário' })
+    @Put('/employee/:id')
+    async BloqueiaDesbloqueiaFuncionario(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.bloqueiaDesbloqueiaFuncionario(req.user.sub, id))
+        }
+    }
 }
