@@ -47,4 +47,13 @@ export class UsersService {
             where: { id_estabelecimento },
         });
     }
+
+    async getEmployeesByEstablishment(id_estabelemcimento: number) {
+        return await this.prismaService.usuario.findMany({
+            where: {
+                id_estabelecimento: id_estabelemcimento,
+                tipo: 'Funcionario',
+            }
+        })
+    }
 }
