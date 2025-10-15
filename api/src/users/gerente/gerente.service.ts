@@ -347,4 +347,15 @@ export class GerenteService {
       }))
     }
 
+    //rota para bloquear e desbloquear funcionario
+    async bloqueiaDesbloqueiaFuncionario(userId: number, employeeId: number) {
+      const user = await this.userService.getUserById(userId)
+      const employee = await this.userService.getUserById(employeeId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+      if(!employee || employee.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Funcionário não encontrado', 404)
+      if(employee.tipo != 'Funcionario') throw new HttpException('Usuário não é um funcionário', 400)
+
+      await this.userService.updateUser(employeeId, { status: employee.status === Number(process.env.STATUS_VERIFICADO) ? Number(process.env.STATUS_BLOQUEADO) : Number(process.env.STATUS_VERIFICADO) })
+    }
 }
