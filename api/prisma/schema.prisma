@@ -99,6 +99,20 @@ model Evento {
 
   @@index([id_endereco], map: "id_endereco")
   @@index([id_estabelecimento], map: "id_estabelecimento")
+  Evento_Historico Evento_Historico[] @relation(map: "Evento_Historico_ibfk_1")
+}
+
+model Historico {
+  id_his        Int        @id @default(autoincrement())
+  id_usuario    Int?
+  campo          String     @db.VarChar(100)
+  valor_antigo   String?    @db.VarChar(1000)
+  valor_novo     String?    @db.VarChar(1000)
+
+  Usuario        Usuario?   @relation(fields: [id_usuario], references: [id_usuario], onDelete: SetNull, map: "Historico_ibfk_usuario")
+
+  @@index([id_usuario])
+  Evento_Historico Evento_Historico[] @relation(map: "Evento_Historico_ibfk_2")
 }
 
 model Evento_Categoria {
@@ -109,6 +123,16 @@ model Evento_Categoria {
 
   @@id([id_evento, id_categoria])
   @@index([id_categoria], map: "id_categoria")
+}
+
+model Evento_Historico {
+  id_evento    Int
+  id_his Int
+
+  Evento    Evento    @relation(fields: [id_evento], references: [id_evento], onDelete: Cascade, map: "Evento_Historico_ibfk_1")
+  Historico Historico @relation(fields: [id_his], references: [id_his], onDelete: Cascade, map: "Evento_Historico_ibfk_2")
+
+  @@id([id_evento, id_his])
 }
 
 model Usuario {
@@ -123,6 +147,7 @@ model Usuario {
   Estabelecimento    Estabelecimento? @relation(fields: [id_estabelecimento], references: [id_estabelecimento], onUpdate: NoAction, map: "Usuario_ibfk_1")
 
   @@index([id_estabelecimento], map: "id_estabelecimento")
+  Historico Historico[] @relation(map: "Historico_ibfk_usuario")
 }
 
 enum Usuario_tipo {
