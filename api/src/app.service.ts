@@ -38,6 +38,7 @@ export class AppService {
         return path
     }
 
+    //rota para buscar foto do evento
     async buscaFotoEvento(name: string): Promise<string> {
         const path = join(__dirname, "images", "events", name).replace("dist", "src");
 
@@ -46,6 +47,7 @@ export class AppService {
         return path
     }
 
+    //rota para buscar evento pelo id
     async buscaEvento(id: number) {
         const evento = await this.eventoService.buscaEventoPorId(id);
 
@@ -56,6 +58,22 @@ export class AppService {
         return evento
     }
 
+    async buscaEventoPorEstabelecimento(id: number) {
+        const eventos = await this.eventoService.buscaPorEstabelecimento(id);
+
+        if (!eventos) return null
+
+        return eventos.map(evento => ({
+            ...eventos,
+            foto: `http://localhost:3000/event/image/${evento.foto}`,
+            Estabelecimento: {
+                ...evento.Estabelecimento,
+                imagem: `http://localhost:3000/establishment/image/${evento?.Estabelecimento.imagem}`
+            }
+        }))
+    }
+
+    //rota para buscar eventos e filtrar
     async filtraEvento(filtros: { name?: string; category?: number[]; city?: string, date?: Date }) {
         if(!filtros.name && (!filtros.category || filtros.category.length == 0) && !filtros.city && !filtros.date){
             const eventos = await this.eventoService.buscaTodosEventos()
@@ -79,6 +97,7 @@ export class AppService {
             }))
     }
 
+    //rota para buscar estabelecimento pelo id
     async buscaEstabelecimento(id: number) {
         const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(id)
 
