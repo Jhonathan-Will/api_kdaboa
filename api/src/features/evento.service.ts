@@ -60,11 +60,11 @@ export class EventoService {
         })
     }
 
-    async buscaPorEstabelecimento(id_est: number) {
+    async buscaPorEstabelecimento(id_est: number, onlyActive: boolean) {
         return await this.prisma.evento.findMany({
             where: { 
                 id_estabelecimento: id_est,
-                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+                ...(onlyActive && {estatus: Number(process.env.EVENT_STATUS_CRIADO)})
             },
             include: {
                 Endereco: true,

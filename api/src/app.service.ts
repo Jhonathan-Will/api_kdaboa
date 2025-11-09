@@ -59,7 +59,7 @@ export class AppService {
     }
 
     async buscaEventoPorEstabelecimento(id: number) {
-        const eventos = await this.eventoService.buscaPorEstabelecimento(id);
+        const eventos = await this.eventoService.buscaPorEstabelecimento(id, true);
 
         if (!eventos) return null
 
