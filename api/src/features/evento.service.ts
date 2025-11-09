@@ -35,6 +35,9 @@ export class EventoService {
     
     async buscaTodosEventos() {
         return await this.prisma.evento.findMany({
+            where: {
+                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+            },
             include: {
                 Estabelecimento: {
                     select: {
@@ -59,7 +62,10 @@ export class EventoService {
 
     async buscaPorEstabelecimento(id_est: number) {
         return await this.prisma.evento.findMany({
-            where: { id_estabelecimento: id_est },
+            where: { 
+                id_estabelecimento: id_est,
+                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+            },
             include: {
                 Endereco: true,
                 Estabelecimento: {
@@ -85,7 +91,10 @@ export class EventoService {
 
     async buscaEventoPorId(eventId: number) {
         return await this.prisma.evento.findUnique({
-            where: { id_evento: eventId },
+            where: { 
+                id_evento: eventId, 
+                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+            },
             include: {
                 Endereco: true,
                 Estabelecimento: {
@@ -114,6 +123,7 @@ export class EventoService {
             const { name, category, city, date } = filtros;
             return this.prisma.evento.findMany({
                 where: {
+                    estatus: Number(process.env.EVENT_STATUS_CRIADO),
                     ...(name && { nome_evento: { contains: name } }),
                     ...(date && {
                         data_inicio: {
