@@ -323,6 +323,7 @@ export class GerenteController {
         }
     }
 
+    //rota para pegar eventos em quarentena
     @UseGuards(RefreshGuard)
     @ApiOperation({summary: 'Busca eventos em quarentena'})
     @Get("/event/waiting")
@@ -439,6 +440,15 @@ export class GerenteController {
     async ExcluirFuncionario(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.excluirFuncionario(req.user.sub, id))
+        }
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Acetia ou nega um evento em quarentena' })
+    @Put('/event/waiting/:id')
+    async AceitaNegaEventoEmQuarentena(@Param('id') id: number, @Query('accept') accept: boolean, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.aceitaOuNegaEvento(req.user.sub, id, accept))
         }
     }
 }

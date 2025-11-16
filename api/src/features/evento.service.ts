@@ -119,11 +119,11 @@ export class EventoService {
         })
     }
 
-    async buscaEventoPorId(eventId: number) {
+    async buscaEventoPorId(eventId: number, onlyActive: boolean) {
         return await this.prisma.evento.findUnique({
             where: { 
-                id_evento: eventId, 
-                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+                id_evento: eventId,
+                ...(onlyActive ? {estatus: Number(process.env.EVENT_STATUS_CRIADO)} : {estatus: Number(process.env.EVENT_STATUS_PENDENTE)})
             },
             include: {
                 Endereco: true,
@@ -211,6 +211,13 @@ export class EventoService {
                 id_evento: eventId,
                 id_categoria
             }))
+        });
+    }
+
+    async alteraEstatus(eventId: number, status: number) {
+        return this.prisma.evento.update({
+            where: { id_evento: eventId },
+            data: { estatus: status }
         });
     }
 

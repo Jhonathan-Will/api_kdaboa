@@ -2,7 +2,6 @@ import { Injectable, HttpException } from "@nestjs/common";
 import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
-import { CsrfService } from "src/security/csrf/csrf.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -289,6 +288,7 @@ export class GerenteService {
       
     }
 
+    //rota para buscar eventos em quarentena
     async buscaEventosEmQuarentena(userId: number): Promise<EventoDTO[]> {
       const user = await this.userService.getUserById(userId)
 
@@ -310,7 +310,7 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaEventoPorId(eventId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
 
       if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
       
@@ -338,7 +338,7 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaEventoPorId(eventId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
 
       if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
 
@@ -384,5 +384,31 @@ export class GerenteService {
       if(employee.tipo != 'Funcionario') throw new HttpException('Usuário não é um funcionário', 400)
 
       await this.userService.deleteUser(employeeId)
+    }
+
+    //rota para aceitar ou negar eventos em quarentena
+    async aceitaOuNegaEvento(userId: number, eventId:number, aceita: boolean) {
+        const user = await this.userService.getUserById(userId)
+        const event = await this.eventoService.buscaEventoPorId(eventId, false)
+        console.log(event, eventId)
+        if(!user || !user.id_estabelecimento){ 
+          throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+        }
+
+        if(!event || event.id_estabelecimento != user.id_estabelecimento){
+          throw new HttpException('Evento não encontrado', 404)
+        } 
+
+        switch(aceita) {
+            case true:
+                return await this.eventoService.alteraEstatus(eventId, Number(process.env.EVENT_STATUS_CRIADO) )
+            case false:
+              fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).then(() => {
+                  return this.eventoService.deletaEvento(eventId)
+              }).catch((error) => {
+                  throw new HttpException('Erro ao deletar evento', 500);
+              });
+                
+        }
     }
 }

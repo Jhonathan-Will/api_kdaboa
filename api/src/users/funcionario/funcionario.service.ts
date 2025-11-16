@@ -35,7 +35,7 @@ export class FuncionarioService {
             throw new HttpException('Usuário não possui estabelecimento vinculado', 404);
         } 
 
-        const event = await this.eventoService.buscaEventoPorId(eventId);
+        const event = await this.eventoService.buscaEventoPorId(eventId, true);
         
         if (!event || event.id_estabelecimento != user.id_estabelecimento) {
             throw new HttpException('Evento não encontrado', 404);

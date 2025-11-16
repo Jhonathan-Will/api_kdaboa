@@ -49,7 +49,7 @@ export class AppService {
 
     //rota para buscar evento pelo id
     async buscaEvento(id: number) {
-        const evento = await this.eventoService.buscaEventoPorId(id);
+        const evento = await this.eventoService.buscaEventoPorId(id, true);
 
         if (!evento) return null
         evento.foto = `http://localhost:3000/event/image/${evento.foto}`
