@@ -279,7 +279,7 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento, false)
 
       return event.map(evento => ({
         ...evento,
@@ -287,6 +287,21 @@ export class GerenteService {
       }));
 
       
+    }
+
+    async buscaEventosEmQuarentena(userId: number): Promise<EventoDTO[]> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
+
+      const event = await this.eventoService.buscaEmQuarentenaPorEstabelecimento(user.id_estabelecimento)
+
+      if(!event || event.length === 0) return []
+
+      return event.map(evento => ({
+        ...evento,
+        foto: `http://localhost:3000/event/image/${evento.foto}`
+      }))
     }
 
     //rota para alterar evento

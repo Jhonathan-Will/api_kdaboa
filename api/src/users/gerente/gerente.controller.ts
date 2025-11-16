@@ -15,6 +15,7 @@ import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
 import { ImageHandlePipe } from 'src/common/pipe/imageHandle.pipe';
+import { ref } from 'process';
 
 @Controller("gerente")
 export class GerenteController {
@@ -316,9 +317,18 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca todos os eventos para o estabelecimento' })
     @Get('/event')
-    async BuscaEstabelecimento(@Req() req: any, @Res() res: Response) {
+    async BuscaEventoPorEstabelecimento(@Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoPorEstabelecimento(req.user.sub))
+        }
+    }
+
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Busca eventos em quarentena'})
+    @Get("/event/waiting")
+    async BuscaEventosEmQuarentena(@Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventosEmQuarentena(req.user.sub))
         }
     }
 

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
+import { Evento } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
-
 @Injectable()
 export class EventoService {
   
@@ -86,6 +86,36 @@ export class EventoService {
                     }
                 }
             }
+        })
+    }
+
+    async buscaEmQuarentenaPorEstabelecimento(id_est: number) {
+        return await this.prisma.evento.findMany({
+            where: {
+                id_estabelecimento: id_est,
+                estatus: Number(process.env.EVENT_STATUS_PENDENTE)
+            },
+            include: {
+                Endereco: true,
+                Estabelecimento: {
+                    include: {
+                        Contato: true,
+                        Galeria: true
+                    }
+                },
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
+            }
+            
         })
     }
 
