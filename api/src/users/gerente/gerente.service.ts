@@ -13,6 +13,7 @@ import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
+import { HistoricoService } from "src/features/historico.service";
 
 @Injectable()
 export class GerenteService {
@@ -22,7 +23,8 @@ export class GerenteService {
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService,
                 private readonly contatoService: ContatoService,
-                private readonly eventoService: EventoService) {}
+                private readonly eventoService: EventoService,
+                private readonly historicoService: HistoricoService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
@@ -390,7 +392,7 @@ export class GerenteService {
     async aceitaOuNegaEvento(userId: number, eventId:number, aceita: boolean) {
         const user = await this.userService.getUserById(userId)
         const event = await this.eventoService.buscaEventoPorId(eventId, false)
-        console.log(event, eventId)
+
         if(!user || !user.id_estabelecimento){ 
           throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
         }
@@ -409,6 +411,52 @@ export class GerenteService {
                   throw new HttpException('Erro ao deletar evento', 500);
               });
                 
+        }
+    }
+
+    //rota para aceitar ou negar alteração de um evento
+    async aceitaNegaAlteracaoEvento(userID: number, eventId: number, historyId: number, aceita: boolean) {
+        const user = await this.userService.getUserById(userID)
+        const event = await this.eventoService.buscaEventoPorId(eventId, true)
+        const history = await this.eventoService.buscaHistoricoPorEvento(eventId, historyId)
+
+        if(!user || !user.id_estabelecimento){ 
+          throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+        }
+
+        if(!event || event.id_estabelecimento != user.id_estabelecimento){
+          throw new HttpException('Evento não encontrado', 404)
+        }
+
+        if(!history) {
+          throw new HttpException('Histórico de alteração não encontrado para este evento', 404)
+        }
+        
+        switch(aceita) {
+            case true:
+                await this.historicoService.deletaHistorico(historyId).then( () => {
+                  if(history.campo === 'foto') {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).catch((error) => {
+                      console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
+                    })
+                  }
+                  
+                  return this.eventoService.alteracaoDoHistorico(eventId, history)
+                }).catch((error) => {
+                  console.log('Error ao alterar evento com dados da quarentena', error)
+                  throw new HttpException('Erro ao aceitar alteração do evento', 500);
+                })
+
+                break;
+            case false: 
+                await this.historicoService.deletaHistorico(historyId).then(() => {
+                  if(history.campo === 'foto' && history.valor_novo) {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", history.valor_novo).replace("dist", "src")).catch((error) => {
+                      console.log('Error ao deletar imagem rejeitada do evento após negar alteração', error)
+                    })
+                  }
+                })
+                break;
         }
     }
 }

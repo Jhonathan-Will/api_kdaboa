@@ -443,12 +443,23 @@ export class GerenteController {
         }
     }
 
+    //rota para aceitar ou negar evento em quarentena
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Acetia ou nega um evento em quarentena' })
     @Put('/event/waiting/:id')
     async AceitaNegaEventoEmQuarentena(@Param('id') id: number, @Query('accept') accept: boolean, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.aceitaOuNegaEvento(req.user.sub, id, accept))
+        }
+    }
+
+    //rota para aceitar ou negar alteração de um evento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Aceita ou nega a alteração de um evento' })
+    @Put('/event/alteration/:id/:historyId')
+    async AceitaNegaAlteracaoEvento(@Param('id') id: number, @Param('historyId') historyId: number, @Query('accept') accept: boolean, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.aceitaNegaAlteracaoEvento(req.user.sub, id, historyId, accept))
         }
     }
 }

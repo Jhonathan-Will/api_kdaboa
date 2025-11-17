@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Evento } from "@prisma/client";
+import { Evento, Historico } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
 @Injectable()
@@ -199,6 +199,19 @@ export class EventoService {
         }   
     }
 
+    async buscaHistoricoPorEvento(eventId: number, historyId: number) {
+        return await this.prisma.historico.findFirst({
+            where: {
+                id_his: historyId,
+                Evento_Historico: {
+                    some: {
+                        id_evento: eventId
+                    }
+                }
+            }
+        })
+    }
+
     async alteraCategoria(eventId: number, data: Array<number>) {
         // Remove todas as categorias antigas do evento
         await this.prisma.evento_Categoria.deleteMany({
@@ -218,6 +231,13 @@ export class EventoService {
         return this.prisma.evento.update({
             where: { id_evento: eventId },
             data: { estatus: status }
+        });
+    }
+
+    async alteracaoDoHistorico(eventId: number, history: Historico) {
+        return await this.prisma.evento.update({
+            where: { id_evento: eventId },
+            data: { [history.campo]: history.valor_novo }
         });
     }
 
