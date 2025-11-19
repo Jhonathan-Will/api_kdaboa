@@ -333,6 +333,16 @@ export class GerenteController {
         }
     }
 
+    //rota para pegar evento com dados do historico
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Busca um evento com dados do historico' })
+    @Get('/event/alteration/:id')
+    async BuscaEventoComHistorico(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoComHistorico(req.user.sub, id))
+        }
+    }
+
     //rota para alterar evento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera algum evento' })

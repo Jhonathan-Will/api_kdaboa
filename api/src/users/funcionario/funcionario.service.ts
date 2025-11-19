@@ -93,7 +93,7 @@ export class FuncionarioService {
                     id_usuario: user.id_usuario,
                     campo: record,
                     valor_antigo: String(event[record]),
-                    valor_novo: novo,
+                    valor_novo: String(novo),
                     Evento_Historico: {
                         create: {
                             id_evento: event.id_evento

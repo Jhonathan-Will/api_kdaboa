@@ -199,6 +199,25 @@ export class EventoService {
         }   
     }
 
+    async buscaTodosOsHistoricosDoEvento(eventId: number) {
+        return await this.prisma.historico.findMany({
+            where: {
+                Evento_Historico: {
+                    some: {
+                        id_evento: eventId
+                    }
+                }
+            },
+            include: {
+                Usuario: {
+                    select: {
+                        nome_usuario: true,
+                    }
+                }
+            }
+        })
+    }
+
     async buscaHistoricoPorEvento(eventId: number, historyId: number) {
         return await this.prisma.historico.findFirst({
             where: {

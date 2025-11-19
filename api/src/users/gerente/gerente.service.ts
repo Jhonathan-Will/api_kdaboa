@@ -14,6 +14,7 @@ import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
 import { HistoricoService } from "src/features/historico.service";
+import { Evento, Historico } from "@prisma/client";
 
 @Injectable()
 export class GerenteService {
@@ -304,6 +305,26 @@ export class GerenteService {
         ...evento,
         foto: `http://localhost:3000/event/image/${evento.foto}`
       }))
+    }
+
+    //rota para buscar evento com dados do historico
+    async buscaEventoComHistorico(userId: number, eventId: number): Promise<Historico[]> {
+      const user = await this.userService.getUserById(userId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
+      const historico = await this.eventoService.buscaTodosOsHistoricosDoEvento(eventId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+      if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
+      if(!historico || historico.length === 0) throw new HttpException('Nenhum histórico de alteração encontrado para este evento', 404)
+      
+      historico.forEach(history => {
+        if(history.campo === 'foto') {
+          history.valor_novo = `http://localhost:3000/event/image/${history.valor_novo}`
+          history.valor_antigo = `http://localhost:3000/event/image/${history.valor_antigo}`
+        }
+      })
+      
+      return historico
     }
 
     //rota para alterar evento
