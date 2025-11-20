@@ -11,7 +11,7 @@ export class EventoService {
         return this.prisma.evento.create({
 
             data: {
-                nome_evento: data.nome,
+                nome_evento: data.nome_evento,
                 descricao: data.descricao,
                 data_criacao: new Date(),
                 data_inicio: data.data_inicio,
@@ -256,7 +256,7 @@ export class EventoService {
     async alteracaoDoHistorico(eventId: number, history: Historico) {
         return await this.prisma.evento.update({
             where: { id_evento: eventId },
-            data: { [history.campo]: history.valor_novo }
+            data: { [history.campo]: ( history.campo === "id_endereco" ? Number(history.valor_novo) : history.valor_novo ) }
         });
     }
 
@@ -265,7 +265,7 @@ export class EventoService {
             return this.prisma.evento.update({
                 where: { id_evento: eventId },
                 data: {
-                    nome_evento: data.nome,
+                    nome_evento: data.nome_evento,
                     descricao: data.descricao,
                     data_inicio: data.data_inicio,
                     data_fim: data.data_fim,

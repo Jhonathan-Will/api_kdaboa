@@ -27,7 +27,7 @@ export class FuncionarioController {
                     format: 'binary',
                     description: 'Imagem do evento'
                 },
-                nome: {
+                nome_evento: {
                     type: 'string',
                     example: 'Festa de Aniversário',
                     description: 'Nome do evento'
@@ -98,7 +98,7 @@ export class FuncionarioController {
                     format: 'binary',
                     description: 'Imagem do evento'
                 },
-                nome: {
+                nome_evento: {
                     type: 'string',
                     example: 'Festa de Aniversário',
                     description: 'Nome do evento'
@@ -132,7 +132,7 @@ export class FuncionarioController {
             },
             required: [
                 'images',
-                'nome',
+                'nome_evento',
                 'descricao',
                 'data_inicio',
                 'data_fim',

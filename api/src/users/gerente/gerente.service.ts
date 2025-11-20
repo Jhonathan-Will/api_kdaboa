@@ -461,8 +461,12 @@ export class GerenteService {
                       console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
                     })
                   }
+
+                  if(history.campo !== 'categoria') {
+                    return this.eventoService.alteracaoDoHistorico(eventId, history)
+                  }
                   
-                  return this.eventoService.alteracaoDoHistorico(eventId, history)
+                  this.eventoService.alteraCategoria(eventId, (history.valor_novo!.split(',').map(id => parseInt(id))))
                 }).catch((error) => {
                   console.log('Error ao alterar evento com dados da quarentena', error)
                   throw new HttpException('Erro ao aceitar alteração do evento', 500);

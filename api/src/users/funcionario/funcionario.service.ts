@@ -36,12 +36,13 @@ export class FuncionarioService {
         } 
 
         const event = await this.eventoService.buscaEventoPorId(eventId, true);
-        
+
         if (!event || event.id_estabelecimento != user.id_estabelecimento) {
             throw new HttpException('Evento não encontrado', 404);
         }
         
         const history = await this.historicoService.encontraHistoricoPorEvento(event.id_evento);
+        const category = event.Evento_Categoria.map(c => c.id_categoria)
 
         if(event.foto !== file) {
             const found = history.find(h => h.campo === "foto");
@@ -63,15 +64,32 @@ export class FuncionarioService {
             };
         }
 
+        if(category.sort().toString() !== data.categoria.sort().toString()) {
+            await this.historicoService.adicionaHistorico({
+                id_usuario: user.id_usuario,
+                campo: "categoria",
+                valor_antigo: category.toString(),
+                valor_novo: data.categoria.toString(),
+                Evento_Historico: {
+                    create: {
+                        id_evento: event.id_evento
+                    }
+                }
+            })
+        }
+
         for (const record of Object.keys(data)) {
 
-            if (!(record in event)) continue;
+            if (!(record in event) && record === event[record] && record !== 'categoria') continue;
 
             const antigo = event[record];
+
             const novo = (data as any)[record];
 
             const antigoStr = antigo instanceof Date ? antigo.toISOString() : String(antigo ?? '');
+
             const novoStr = novo instanceof Date ? new Date(novo).toISOString() : String(novo ?? '');
+
 
             if (antigoStr === novoStr) continue; // sem alteração -> pula
 
