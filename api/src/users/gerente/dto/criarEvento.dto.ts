@@ -10,7 +10,7 @@ export class CriarEventoDTO {
     })
     @IsString({ message: 'Nome deve ser uma string' })
     @IsNotEmpty({ message: 'Nome não pode ser vazio' })
-    nome: string;
+    nome_evento: string;
 
     @ApiProperty({
         description: 'Descrição do evento',
