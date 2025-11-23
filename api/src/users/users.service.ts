@@ -41,4 +41,19 @@ export class UsersService {
             where: { email },
         });
     }
+
+    async getUsersByEstablishment(id_estabelecimento: number) {
+        return await this.prismaService.usuario.findMany({
+            where: { id_estabelecimento },
+        });
+    }
+
+    async getEmployeesByEstablishment(id_estabelemcimento: number) {
+        return await this.prismaService.usuario.findMany({
+            where: {
+                id_estabelecimento: id_estabelemcimento,
+                tipo: 'Funcionario',
+            }
+        })
+    }
 }

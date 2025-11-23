@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
+import { Evento, Historico } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
-
 @Injectable()
 export class EventoService {
   
@@ -11,7 +11,7 @@ export class EventoService {
         return this.prisma.evento.create({
 
             data: {
-                nome_evento: data.nome,
+                nome_evento: data.nome_evento,
                 descricao: data.descricao,
                 data_criacao: new Date(),
                 data_inicio: data.data_inicio,
@@ -35,6 +35,9 @@ export class EventoService {
     
     async buscaTodosEventos() {
         return await this.prisma.evento.findMany({
+            where: {
+                estatus: Number(process.env.EVENT_STATUS_CRIADO)
+            },
             include: {
                 Estabelecimento: {
                     select: {
@@ -57,9 +60,12 @@ export class EventoService {
         })
     }
 
-    async buscaPorEstabelecimento(id_est: number) {
+    async buscaPorEstabelecimento(id_est: number, onlyActive: boolean) {
         return await this.prisma.evento.findMany({
-            where: { id_estabelecimento: id_est },
+            where: { 
+                id_estabelecimento: id_est,
+                ...(onlyActive && {estatus: Number(process.env.EVENT_STATUS_CRIADO)})
+            },
             include: {
                 Endereco: true,
                 Estabelecimento: {
@@ -83,9 +89,42 @@ export class EventoService {
         })
     }
 
-    async buscaEventoPorId(eventId: number) {
+    async buscaEmQuarentenaPorEstabelecimento(id_est: number) {
+        return await this.prisma.evento.findMany({
+            where: {
+                id_estabelecimento: id_est,
+                estatus: Number(process.env.EVENT_STATUS_PENDENTE)
+            },
+            include: {
+                Endereco: true,
+                Estabelecimento: {
+                    include: {
+                        Contato: true,
+                        Galeria: true
+                    }
+                },
+                Evento_Categoria: {
+                    include: {
+                        Categoria: {
+                            select: {
+                                id_categoria: true,
+                                nome_categoria: true,
+                                icone: true
+                            }
+                        }
+                    }
+                }
+            }
+            
+        })
+    }
+
+    async buscaEventoPorId(eventId: number, onlyActive: boolean) {
         return await this.prisma.evento.findUnique({
-            where: { id_evento: eventId },
+            where: { 
+                id_evento: eventId,
+                ...(onlyActive ? {estatus: Number(process.env.EVENT_STATUS_CRIADO)} : {estatus: Number(process.env.EVENT_STATUS_PENDENTE)})
+            },
             include: {
                 Endereco: true,
                 Estabelecimento: {
@@ -114,6 +153,7 @@ export class EventoService {
             const { name, category, city, date } = filtros;
             return this.prisma.evento.findMany({
                 where: {
+                    estatus: Number(process.env.EVENT_STATUS_CRIADO),
                     ...(name && { nome_evento: { contains: name } }),
                     ...(date && {
                         data_inicio: {
@@ -159,6 +199,38 @@ export class EventoService {
         }   
     }
 
+    async buscaTodosOsHistoricosDoEvento(eventId: number) {
+        return await this.prisma.historico.findMany({
+            where: {
+                Evento_Historico: {
+                    some: {
+                        id_evento: eventId
+                    }
+                }
+            },
+            include: {
+                Usuario: {
+                    select: {
+                        nome_usuario: true,
+                    }
+                }
+            }
+        })
+    }
+
+    async buscaHistoricoPorEvento(eventId: number, historyId: number) {
+        return await this.prisma.historico.findFirst({
+            where: {
+                id_his: historyId,
+                Evento_Historico: {
+                    some: {
+                        id_evento: eventId
+                    }
+                }
+            }
+        })
+    }
+
     async alteraCategoria(eventId: number, data: Array<number>) {
         // Remove todas as categorias antigas do evento
         await this.prisma.evento_Categoria.deleteMany({
@@ -174,12 +246,26 @@ export class EventoService {
         });
     }
 
+    async alteraEstatus(eventId: number, status: number) {
+        return this.prisma.evento.update({
+            where: { id_evento: eventId },
+            data: { estatus: status }
+        });
+    }
+
+    async alteracaoDoHistorico(eventId: number, history: Historico) {
+        return await this.prisma.evento.update({
+            where: { id_evento: eventId },
+            data: { [history.campo]: ( history.campo === "id_endereco" ? Number(history.valor_novo) : history.valor_novo ) }
+        });
+    }
+
     async alteraEvento(data: CriarEventoDTO, foto: string, eventId: number) {
         try {
             return this.prisma.evento.update({
                 where: { id_evento: eventId },
                 data: {
-                    nome_evento: data.nome,
+                    nome_evento: data.nome_evento,
                     descricao: data.descricao,
                     data_inicio: data.data_inicio,
                     data_fim: data.data_fim,

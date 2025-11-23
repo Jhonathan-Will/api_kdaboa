@@ -2,7 +2,6 @@ import { Injectable, HttpException } from "@nestjs/common";
 import { CriarEstabelecimentoDTO } from "./dto/criarEstabelecimento.dto";
 import { UsersService } from "../users.service";
 import { CriarEnderecoDTO } from "./dto/criarEndreço.dto";
-import { CsrfService } from "src/security/csrf/csrf.service";
 import { EnderecoService } from "src/features/endereco.service";
 import { EstabelecimentoService } from "src/features/estabelecimento.service";
 import { GaleriaService } from "src/features/galeria.service";
@@ -14,16 +13,19 @@ import { CriarEventoDTO } from "./dto/criarEvento.dto";
 import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
+import { HistoricoService } from "src/features/historico.service";
+import { Evento, Historico } from "@prisma/client";
+
 @Injectable()
 export class GerenteService {
     
     constructor(private readonly userService: UsersService,
-                private readonly csrf: CsrfService,
                 private readonly enderecoService: EnderecoService,
                 private readonly estabelecimentoService: EstabelecimentoService,
                 private readonly galeriaService: GaleriaService,
                 private readonly contatoService: ContatoService,
-                private readonly eventoService: EventoService) {}
+                private readonly eventoService: EventoService,
+                private readonly historicoService: HistoricoService) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
@@ -279,7 +281,7 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento)
+      const event = await this.eventoService.buscaPorEstabelecimento(user.id_estabelecimento, false)
 
       return event.map(evento => ({
         ...evento,
@@ -289,13 +291,49 @@ export class GerenteService {
       
     }
 
+    //rota para buscar eventos em quarentena
+    async buscaEventosEmQuarentena(userId: number): Promise<EventoDTO[]> {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possue establecimento vinculado', 404)
+
+      const event = await this.eventoService.buscaEmQuarentenaPorEstabelecimento(user.id_estabelecimento)
+
+      if(!event || event.length === 0) return []
+
+      return event.map(evento => ({
+        ...evento,
+        foto: `http://localhost:3000/event/image/${evento.foto}`
+      }))
+    }
+
+    //rota para buscar evento com dados do historico
+    async buscaEventoComHistorico(userId: number, eventId: number): Promise<Historico[]> {
+      const user = await this.userService.getUserById(userId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
+      const historico = await this.eventoService.buscaTodosOsHistoricosDoEvento(eventId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+      if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
+      if(!historico || historico.length === 0) throw new HttpException('Nenhum histórico de alteração encontrado para este evento', 404)
+      
+      historico.forEach(history => {
+        if(history.campo === 'foto') {
+          history.valor_novo = `http://localhost:3000/event/image/${history.valor_novo}`
+          history.valor_antigo = `http://localhost:3000/event/image/${history.valor_antigo}`
+        }
+      })
+      
+      return historico
+    }
+
     //rota para alterar evento
     async alteraEvento(userId: number, eventId: number, file: string, data: CriarEventoDTO) {
       const user = await this.userService.getUserById(userId)
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaEventoPorId(eventId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
 
       if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
       
@@ -313,7 +351,6 @@ export class GerenteService {
       await this.eventoService.alteraEvento(data, file, eventId).then(response => {
         return response
       }).catch(error => {
-                    console.log('aaaaaaaaaaa')
         console.log(error)
       })
     }
@@ -324,10 +361,127 @@ export class GerenteService {
 
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
 
-      const event = await this.eventoService.buscaEventoPorId(eventId)
+      const event = await this.eventoService.buscaEventoPorId(eventId, true)
 
       if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
 
       return await this.eventoService.deletaEvento(eventId)
+    }
+
+    //rota para buscar funcionario
+    async buscaFuncionario(userId: number) {
+      const user = await this.userService.getUserById(userId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+
+      const funcionarios = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento)
+
+      if(!funcionarios || funcionarios.length === 0) return []
+
+      return funcionarios.map(funcionario => ({
+          ...funcionario,
+          senha: undefined,
+          foto: `http://localhost:3000/user/image/${funcionario.foto}`
+      }))
+    }
+
+    //rota para bloquear e desbloquear funcionario
+    async bloqueiaDesbloqueiaFuncionario(userId: number, employeeId: number) {
+      const user = await this.userService.getUserById(userId)
+      const employee = await this.userService.getUserById(employeeId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+      if(!employee || employee.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Funcionário não encontrado', 404)
+      if(employee.tipo != 'Funcionario') throw new HttpException('Usuário não é um funcionário', 400)
+
+      await this.userService.updateUser(employeeId, { status: employee.status === Number(process.env.STATUS_VERIFICADO) ? Number(process.env.STATUS_BLOQUEADO) : Number(process.env.STATUS_VERIFICADO) })
+    }
+
+    //rota para deletar funcionario
+    async excluirFuncionario(userId: number, employeeId: number) {
+      const user = await this.userService.getUserById(userId)
+      const employee = await this.userService.getUserById(employeeId)
+
+      if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+      if(!employee || employee.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Funcionário não encontrado', 404)
+      if(employee.tipo != 'Funcionario') throw new HttpException('Usuário não é um funcionário', 400)
+
+      await this.userService.deleteUser(employeeId)
+    }
+
+    //rota para aceitar ou negar eventos em quarentena
+    async aceitaOuNegaEvento(userId: number, eventId:number, aceita: boolean) {
+        const user = await this.userService.getUserById(userId)
+        const event = await this.eventoService.buscaEventoPorId(eventId, false)
+
+        if(!user || !user.id_estabelecimento){ 
+          throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+        }
+
+        if(!event || event.id_estabelecimento != user.id_estabelecimento){
+          throw new HttpException('Evento não encontrado', 404)
+        } 
+
+        switch(aceita) {
+            case true:
+                return await this.eventoService.alteraEstatus(eventId, Number(process.env.EVENT_STATUS_CRIADO) )
+            case false:
+              fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).then(() => {
+                  return this.eventoService.deletaEvento(eventId)
+              }).catch((error) => {
+                  throw new HttpException('Erro ao deletar evento', 500);
+              });
+                
+        }
+    }
+
+    //rota para aceitar ou negar alteração de um evento
+    async aceitaNegaAlteracaoEvento(userID: number, eventId: number, historyId: number, aceita: boolean) {
+        const user = await this.userService.getUserById(userID)
+        const event = await this.eventoService.buscaEventoPorId(eventId, true)
+        const history = await this.eventoService.buscaHistoricoPorEvento(eventId, historyId)
+
+        if(!user || !user.id_estabelecimento){ 
+          throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
+        }
+
+        if(!event || event.id_estabelecimento != user.id_estabelecimento){
+          throw new HttpException('Evento não encontrado', 404)
+        }
+
+        if(!history) {
+          throw new HttpException('Histórico de alteração não encontrado para este evento', 404)
+        }
+        
+        switch(aceita) {
+            case true:
+                await this.historicoService.deletaHistorico(historyId).then( () => {
+                  if(history.campo === 'foto') {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).catch((error) => {
+                      console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
+                    })
+                  }
+
+                  if(history.campo !== 'categoria') {
+                    return this.eventoService.alteracaoDoHistorico(eventId, history)
+                  }
+                  
+                  this.eventoService.alteraCategoria(eventId, (history.valor_novo!.split(',').map(id => parseInt(id))))
+                }).catch((error) => {
+                  console.log('Error ao alterar evento com dados da quarentena', error)
+                  throw new HttpException('Erro ao aceitar alteração do evento', 500);
+                })
+
+                break;
+            case false: 
+                await this.historicoService.deletaHistorico(historyId).then(() => {
+                  if(history.campo === 'foto' && history.valor_novo) {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", history.valor_novo).replace("dist", "src")).catch((error) => {
+                      console.log('Error ao deletar imagem rejeitada do evento após negar alteração', error)
+                    })
+                  }
+                })
+                break;
+        }
     }
 }

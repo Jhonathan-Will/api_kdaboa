@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Response } from 'express'
+import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Response } from 'express';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
 import { diskStorage } from 'multer';
+import { CsrfService } from 'src/security/csrf/csrf.service';
 import { LoginDTO } from './dto/login.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
@@ -11,11 +12,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname, join } from 'path';
+import { CriaFunctionarioDTO } from './dto/criaFuncionario';
+import { ImageHandlePipe } from 'src/common/pipe/imageHandle.pipe';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService,
+                private readonly csrf: CsrfService
+    ) {}
 
     //Rotas de Cadastro e Login
     @ApiOperation({ summary: 'Cadastra gerente' })
@@ -55,7 +60,12 @@ export class AuthController {
                                                                 secure: true,
                                                                 sameSite: 'lax',
                                                                 path:'/'})
-            res.send({message: 'login feito com sucesso'})
+
+            if(!response.isManager && response.type === Number(process.env.STATUS_CRIADO)) {
+                res.status(HttpStatus.FOUND).json({redirect : `${process.env.FRONTEND_URL}/alterar-senha`})
+            }else{
+                res.send({message: 'login feito com sucesso'})
+            }
         }).catch((error) => {
             console.log(error)
             throw error
@@ -133,6 +143,14 @@ export class AuthController {
         });
     }
 
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Rota para cadastrar funcionário'})
+    @Post('/employee')
+    async CadastraFuncionario(@Body() funcionario: CriaFunctionarioDTO, @Res() res: Response, @Req() req: any) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.authService.cadastraFuncionario(funcionario, req.user.sub))
+        }
+    }
 
     @Get("dados")
     @UseGuards(RefreshGuard) 
@@ -142,27 +160,7 @@ export class AuthController {
 
     @ApiOperation({ summary: 'Atualiza dados do usuário' })
     @Put("update-user")
-    @UseInterceptors(FileInterceptor('image', {
-        storage: diskStorage({
-            destination: join(__dirname, "..", "images", "profile").replace("dist", "src"),
-            filename: (req, file, cb) => {
-                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
-                const extension = extname(file.originalname);
-
-                const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "profile", fileName).replace("dist", "src");
-                const fs = require('fs');
-                if (fs.existsSync(filePath)) {
-                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
-                    cb(null, `${newUniqueSuffix}${extension}`);
-                } else {
-                    cb(null, `${uniqueSuffix}${extension}`);
-                }
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('image'))
     @ApiBody({
         schema: {
             type: 'object',
@@ -180,7 +178,7 @@ export class AuthController {
     })
     @ApiConsumes('multipart/form-data')
     @UseGuards(RefreshGuard)
-    atualizarUsuario(@Body() body: any, @Req() req: any, @Res() res: Response){
-        return res.status(HttpStatus.OK).json(this.authService.updateUser(body, req.file.filename, req.user.sub));
+    atualizarUsuario(@Body() body: any, @Req() req: any, @Res() res: Response, @UploadedFile( new ImageHandlePipe('profile', false) ) file: Express.Multer.File){
+        return res.status(HttpStatus.OK).json(this.authService.updateUser(body, file.filename, req.user.sub));
     }
 }

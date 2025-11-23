@@ -8,6 +8,7 @@ import { NewPassword } from './dto/new-password.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { CsrfService } from 'src/security/csrf/csrf.service';
+import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 
 @Injectable()
 export class AuthService {
@@ -117,7 +118,9 @@ export class AuthService {
                 return {
                     access_token: this.jwtService.sign(payload, {expiresIn: '1min'}),
                     csrfToken,
-                    refresh_token: this.jwtService.sign(refresh_token)
+                    refresh_token: this.jwtService.sign(refresh_token),
+                    isManager: usuario.tipo === 'Gerente' ? true : false,
+                    type: usuario.status
                 };
             } else {
                 throw new HttpException(
@@ -200,7 +203,7 @@ export class AuthService {
             const usuario = await this.usersService.getUserByEmail(user.email);
 
             if (usuario) {
-                if (usuario.status === Number(process.env.STATUS_CRIADO)) {
+                if (usuario.status === Number(process.env.STATUS_CRIADO) && usuario.tipo === 'Gerente') {
                     throw new HttpException(
                         { status: 400, error: "Email não verificado" },
                         400,
@@ -208,7 +211,8 @@ export class AuthService {
                 }
 
                 const sal = await bcrypt.genSalt(10);
-                const data = {senha: await bcrypt.hash(novaSenha.senha, sal)}
+                const data = {  senha: await bcrypt.hash(novaSenha.senha, sal),
+                                status : usuario.tipo === 'Funcionario' ? Number(process.env.STATUS_VERIFICADO) : usuario.status}
 
                 await this.usersService.updateUser(usuario.id_usuario, data);
 
@@ -243,6 +247,54 @@ export class AuthService {
         const dominioEmail = email.split('@')[1]?.toLowerCase();
 
         return !dominiosPermitidos.includes(dominioEmail);
+    }
+
+    //rota para cadastrar funcionário
+    async cadastraFuncionario(data: CriaFunctionarioDTO, userId: number) {
+        const user = await this.usersService.getUserByEmail(data.email);
+        const manager = await this.usersService.getUserById(userId);
+        
+        if(user) throw new HttpException('Usuário já cadastrado', 400);
+        if(!manager || !manager.id_estabelecimento || manager.status != Number(process.env.STATUS_VERIFICADO)) throw new HttpException('Não foi possivel cadastrar seu novo funcionário', 400);
+
+        const usersByEstablishment = await this.usersService.getUsersByEstablishment(manager.id_estabelecimento)
+
+        if(usersByEstablishment.length >= Number(process.env.LIMITE_FUNCIONARIOS)) throw new HttpException('Limite de funcionários atingido', 400);
+
+        const password = this.generateRandomPassword(10)
+        const hashPassword = await bcrypt.hash(password, await bcrypt.genSalt(10));
+
+        await this.usersService.createUser({
+            nome_usuario: data.nome,
+            email: data.email,
+            senha: hashPassword,
+            tipo: 'Funcionario',
+            id_estabelecimento: manager.id_estabelecimento,
+            status: Number(process.env.STATUS_CRIADO)
+        }).then( response => {
+            try {
+                this.email.sendNewEmployeeEmail(data.email, password, data.nome);
+            }catch (error) {
+                this.usersService.deleteUser(response.id_usuario);
+                console.log(error)
+                throw new HttpException('Erro ao enviar email para o novo funcionário', 500);
+            }
+            
+            return response
+        }).catch( error => {
+            console.log(error)
+            throw new HttpException('Erro ao cadastrar funcionário', 500);
+        })
+    }
+
+    private generateRandomPassword(length: number): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&_-';
+      let password = '';
+      for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * chars.length);
+          password += chars[randomIndex];
+      }
+      return password;
     }
 
     async pegarDados(id: number){

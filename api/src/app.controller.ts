@@ -48,6 +48,13 @@ export class  AppController {
         res.status(HttpStatus.OK).json(await this.appService.buscaEvento(id))
     }
 
+    //rota para buscar eventos por estabelecimento
+    @ApiOperation({summary: "busca eventos por estabelecimento"})
+    @Get("/event/establishment/:id")
+    async BuscaEventoPorEstabelecimento(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+        res.status(HttpStatus.OK).json(await this.appService.buscaEventoPorEstabelecimento(id))
+    }
+
     //rota para pegar todos os eventos
     @ApiOperation({summary: 'busca todos os eventos'})
     @ApiQuery({ name: 'name', required: false, description: 'Parte do nome do evento' })

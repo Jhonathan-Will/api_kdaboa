@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, UseGuards, HttpException, UseInterceptors, Put, Delete, Res, HttpStatus, Query, Param, UploadedFile } from '@nestjs/common';
 import { GerenteService } from './gerente.service';
 import { CriarEstabelecimentoDTO } from './dto/criarEstabelecimento.dto';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
-import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -10,11 +10,12 @@ import { extname, join } from 'path';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
-import { DeletaEnderecoDTO } from './dto/deletaEndereco.dto';
 import { ContatoDTO } from './dto/contato.dto';
 import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
+import { ImageHandlePipe } from 'src/common/pipe/imageHandle.pipe';
+import { ref } from 'process';
 
 @Controller("gerente")
 export class GerenteController {
@@ -45,27 +46,7 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Altera o estabelecimento do usuário' })
     @Put("/establishment")
-    @UseInterceptors(FileInterceptor('image', {
-        storage: diskStorage({
-            destination: join(__dirname, "..", "..", "images", "establishment").replace("dist", "src"),
-            filename: (req, file, cb) => {
-                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
-                const extension = extname(file.originalname);
-
-                const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "establishment", fileName).replace("dist", "src");
-                const fs = require('fs');
-                if (fs.existsSync(filePath)) {
-                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
-                    cb(null, `${newUniqueSuffix}${extension}`);
-                } else {
-                    cb(null, `${uniqueSuffix}${extension}`);
-                }
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('image'))
     @ApiBody({
         schema: {
             type: 'object',
@@ -100,7 +81,7 @@ export class GerenteController {
         },
     })
     @ApiConsumes('multipart/form-data')
-    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any, @Res() res: Response) {
+    AlteraEstabelecimento(@Body() estabelecimento: AlteraEstabelecimentoDTO, @Req() req: any, @Res() res: Response, @UploadedFile( new ImageHandlePipe('establishment', false)) file: Express.Multer.File) {
         const csrfToken = req.cookies['x-csrf-token'] || req.headers['x-csrf-token']
 
         if (!this.csrf.validateToken(csrfToken)) {
@@ -109,7 +90,7 @@ export class GerenteController {
                 error: 'Token CSRF inválido'
             }, 405);
         }
-        res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, req.file.filename, req.user.sub));
+        res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, file.filename, req.user.sub));
     }
 
     //rota para cadastrar endereço
@@ -182,29 +163,9 @@ export class GerenteController {
             },
         },
     })
-    @UseInterceptors(FileInterceptor('images', {
-        storage: diskStorage({
-            destination: join(__dirname, "..", "..", "images", "gallery").replace("dist", "src"),
-            filename: (req, file, cb) => {
-                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
-                const extension = extname(file.originalname);
-
-                const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "gallery", fileName).replace("dist", "src");
-                const fs = require('fs');
-                if (fs.existsSync(filePath)) {
-                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
-                    cb(null, `${newUniqueSuffix}${extension}`);
-                } else {
-                    cb(null, `${uniqueSuffix}${extension}`);
-                }
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('images'))
     @Post("/gallery")
-    CadastrarGaleria(@Body() body: any, @Req() req: any) {
+    CadastrarGaleria(@UploadedFile( new ImageHandlePipe('gallery', true) ) file: Express.Multer.File, @Req() req: any) {
 
         if (!req.file) {
             throw new HttpException({
@@ -213,7 +174,7 @@ export class GerenteController {
             }, 400)
         }
 
-        return this.gerenteService.cadastrarFotoGaleria(req.user.sub, req.file.filename)
+        return this.gerenteService.cadastrarFotoGaleria(req.user.sub, file.filename)
     }
 
     //rota para buscar galeria pelo token do usuario
@@ -256,7 +217,7 @@ export class GerenteController {
         }
     }
 
-    //rota para buscar estabelecimento
+    //rota para buscar contato do estabelecimento
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'busca pelos contatos do estabelecimento' })
     @Get('/contact')
@@ -336,33 +297,13 @@ export class GerenteController {
             ]
         }
     })
-    @UseInterceptors(FileInterceptor('images', {
-        storage: diskStorage({
-            destination: join(__dirname, "..", "..", "images", "events").replace("dist", "src"),
-            filename: (req, file, cb) => {
-                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
-                const extension = extname(file.originalname);
-
-                const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "events", fileName).replace("dist", "src");
-                const fs = require('fs');
-                if (fs.existsSync(filePath)) {
-                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
-                    cb(null, `${newUniqueSuffix}${extension}`);
-                } else {
-                    cb(null, `${uniqueSuffix}${extension}`);
-                }
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('images'))
     @ApiConsumes('multipart/form-data')
     @Post('/event')
-    CadastraEvento(@Body() evento: CriarEventoDTO, @Req() req: any) {
+    CadastraEvento(@Body() evento: CriarEventoDTO, @Req() req: any, @UploadedFile( new ImageHandlePipe('events', true) ) file: Express.Multer.File) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
 
-            this.gerenteService.cadastraEvento(evento, req.user.sub, req.file.filename)
+            this.gerenteService.cadastraEvento(evento, req.user.sub, file.filename)
 
         } else {
             throw new HttpException({
@@ -376,9 +317,29 @@ export class GerenteController {
     @UseGuards(RefreshGuard)
     @ApiOperation({ summary: 'Busca todos os eventos para o estabelecimento' })
     @Get('/event')
-    async BuscaEstabelecimento(@Req() req: any, @Res() res: Response) {
+    async BuscaEventoPorEstabelecimento(@Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoPorEstabelecimento(req.user.sub))
+        }
+    }
+
+    //rota para pegar eventos em quarentena
+    @UseGuards(RefreshGuard)
+    @ApiOperation({summary: 'Busca eventos em quarentena'})
+    @Get("/event/waiting")
+    async BuscaEventosEmQuarentena(@Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventosEmQuarentena(req.user.sub))
+        }
+    }
+
+    //rota para pegar evento com dados do historico
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Busca um evento com dados do historico' })
+    @Get('/event/alteration/:id')
+    async BuscaEventoComHistorico(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaEventoComHistorico(req.user.sub, id))
         }
     }
 
@@ -443,32 +404,12 @@ export class GerenteController {
             ]
         }
     })
-    @UseInterceptors(FileInterceptor('images', {
-        storage: diskStorage({
-            destination: join(__dirname, "..", "..", "images", "events").replace("dist", "src"),
-            filename: (req, file, cb) => {
-                const randomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                const uniqueSuffix = req.user.sub + "-" + Date.now() + '-' + randomPart;
-                const extension = extname(file.originalname);
-
-                const fileName = `${uniqueSuffix}`;
-                const filePath = join(__dirname, "..", "..", "images", "events", fileName).replace("dist", "src");
-                const fs = require('fs');
-                if (fs.existsSync(filePath)) {
-                    const newRandomPart = Math.round(Math.random() * 1E12).toString().slice(-10);
-                    const newUniqueSuffix = req.user.sub + "-" + Date.now() + '-' + newRandomPart;
-                    cb(null, `${newUniqueSuffix}${extension}`);
-                } else {
-                    cb(null, `${uniqueSuffix}${extension}`);
-                }
-            }
-        })
-    }))
+    @UseInterceptors(FileInterceptor('images'))
     @ApiConsumes('multipart/form-data')
     @Put('/event/:id')
-    async AltaraEvento(@Param('id') id: number, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response) {
+    async AltaraEvento(@Param('id') id: number, @Body() evento: CriarEventoDTO, @Req() req: any, @Res() res: Response, @UploadedFile( new ImageHandlePipe('events', false) ) file: Express.Multer.File) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
-            res.status(HttpStatus.OK).json(await this.gerenteService.alteraEvento(req.user.sub, id, req.file.filename, evento))
+            res.status(HttpStatus.OK).json(await this.gerenteService.alteraEvento(req.user.sub, id, file.filename, evento))
         }
     }
 
@@ -479,6 +420,56 @@ export class GerenteController {
     async DeletaEvento(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             res.status(HttpStatus.OK).json(await this.gerenteService.deletaEvento(req.user.sub, id))
+        }
+    }
+
+    //rota para ver funcionario
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Busca pelos funcionarios pelo token do gerente' })
+    @Get('/employee')
+    async VerFuncionario(@Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.buscaFuncionario(req.user.sub))
+        }
+    }
+
+    //rota para bloquear e desbloquear funcionario
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Bloqueia ou desbloqueia um funcionário' })
+    @Put('/employee/:id')
+    async BloqueiaDesbloqueiaFuncionario(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.bloqueiaDesbloqueiaFuncionario(req.user.sub, id))
+        }
+    }
+
+    //rota para excluir funcionario
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Exclui um funcionário' })
+    @Delete('/employee/:id')
+    async ExcluirFuncionario(@Param('id') id: number, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.excluirFuncionario(req.user.sub, id))
+        }
+    }
+
+    //rota para aceitar ou negar evento em quarentena
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Acetia ou nega um evento em quarentena' })
+    @Put('/event/waiting/:id')
+    async AceitaNegaEventoEmQuarentena(@Param('id') id: number, @Query('accept') accept: boolean, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.aceitaOuNegaEvento(req.user.sub, id, accept))
+        }
+    }
+
+    //rota para aceitar ou negar alteração de um evento
+    @UseGuards(RefreshGuard)
+    @ApiOperation({ summary: 'Aceita ou nega a alteração de um evento' })
+    @Put('/event/alteration/:id/:historyId')
+    async AceitaNegaAlteracaoEvento(@Param('id') id: number, @Param('historyId') historyId: number, @Query('accept') accept: boolean, @Req() req: any, @Res() res: Response) {
+        if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
+            res.status(HttpStatus.OK).json(await this.gerenteService.aceitaNegaAlteracaoEvento(req.user.sub, id, historyId, accept))
         }
     }
 }
