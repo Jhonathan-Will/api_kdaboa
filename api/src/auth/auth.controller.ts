@@ -2,18 +2,17 @@ import { Body, Controller, Get, HttpStatus, Post, Put, Query, Req, Res, Uploaded
 import { Response } from 'express';
 import { CriarGereneteDTO } from './dto/create.dto';
 import { AuthService } from './auth.service';
-import { diskStorage } from 'multer';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { LoginDTO } from './dto/login.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiHeader, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ChangeSenhaDTO } from './dto/change-senha.dto';
 import { NewPassword } from './dto/new-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extname, join } from 'path';
 import { CriaFunctionarioDTO } from './dto/criaFuncionario';
 import { ImageHandlePipe } from 'src/common/pipe/imageHandle.pipe';
+import { PasswordValidatePipe } from 'src/common/pipe/passwordValidate.pipe';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -29,7 +28,7 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
     @ApiBody({ type: CriarGereneteDTO })
     @Post("singin")
-    async createGerente(@Body() gerente: CriarGereneteDTO) {
+    async createGerente(@Body( new PasswordValidatePipe() ) gerente: CriarGereneteDTO) {
         try {
             return await this.authService.singIn(gerente)
         } catch (err) {
