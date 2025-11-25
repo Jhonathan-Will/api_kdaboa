@@ -41,7 +41,7 @@ export class FuncionarioService {
             throw new HttpException('Evento não encontrado', 404);
         }
         
-        const history = await this.historicoService.encontraHistoricoPorEvento(event.id_evento);
+        const history = await this.historicoService.encontraHistoricoPorEvento(event.id_evento);   
         const category = event.Evento_Categoria.map(c => c.id_categoria)
 
         if(event.foto !== file) {
@@ -79,8 +79,9 @@ export class FuncionarioService {
         }
 
         for (const record of Object.keys(data)) {
-
-            if (!(record in event) && record === event[record] && record !== 'categoria') continue;
+            if (!(record in event)) continue; 
+            if(record === 'categoria') continue;
+            if(record === event[record]) continue
 
             const antigo = event[record];
 
