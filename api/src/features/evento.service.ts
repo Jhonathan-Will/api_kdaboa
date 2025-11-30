@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Evento, Historico } from "@prisma/client";
+import { EventoModel, HistoricoModel } from "generated/prisma/models";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CriarEventoDTO } from "src/users/gerente/dto/criarEvento.dto";
 @Injectable()
@@ -253,7 +253,7 @@ export class EventoService {
         });
     }
 
-    async alteracaoDoHistorico(eventId: number, history: Historico) {
+    async alteracaoDoHistorico(eventId: number, history: HistoricoModel) {
         return await this.prisma.evento.update({
             where: { id_evento: eventId },
             data: { [history.campo]: ( history.campo === "id_endereco" ? Number(history.valor_novo) : history.valor_novo ) }

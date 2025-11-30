@@ -1,10 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat  = "cjs"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 model Categoria {
@@ -100,6 +101,7 @@ model Evento {
   @@index([id_endereco], map: "id_endereco")
   @@index([id_estabelecimento], map: "id_estabelecimento")
   Evento_Historico Evento_Historico[] @relation(map: "Evento_Historico_ibfk_1")
+  Notificacao Notificacao[] @relation(map: "Notificacao_ibfk_2")
 }
 
 model Historico {
@@ -113,6 +115,18 @@ model Historico {
 
   @@index([id_usuario])
   Evento_Historico Evento_Historico[] @relation(map: "Evento_Historico_ibfk_2")
+}
+
+model Notificacao {
+  id_not      Int      @id @default(autoincrement())
+  id_usuario  Int      
+  Usuario     Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, map: "Notificacao_ibfk_1")
+  id_evento   Int 
+  Evento      Evento   @relation(fields: [id_evento], references: [id_evento], onDelete: NoAction, map: "Notificacao_ibfk_2")
+  titulo      String   @db.VarChar(200)
+  mensagem    String   @db.VarChar(1000)
+  data_envio  DateTime @db.DateTime()
+  lida        Boolean  @db.TinyInt
 }
 
 model Evento_Categoria {
@@ -148,6 +162,7 @@ model Usuario {
 
   @@index([id_estabelecimento], map: "id_estabelecimento")
   Historico Historico[] @relation(map: "Historico_ibfk_usuario")
+  Notificacao Notificacao[] @relation(map: "Notificacao_ibfk_1")
 }
 
 enum Usuario_tipo {
