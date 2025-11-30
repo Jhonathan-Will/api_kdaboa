@@ -301,7 +301,7 @@ export class AuthService {
         const user = await this.usersService.getUserById(id);
 
         if (user) {
-            user.foto = `http://localhost:3000/user/image/${user.foto}`
+            user.foto = `${process.env.BACKEND_URL}/user/image/${user.foto}`
             user.senha = '********';
             return user;
         }

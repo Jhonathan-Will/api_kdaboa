@@ -69,3 +69,5 @@ src/images/establishment/*
 !src/images/profile/.gitkeep
 !src/images/event/.gitkepp
 !src/images/establishment/.gitkeep
+
+/generated/prisma

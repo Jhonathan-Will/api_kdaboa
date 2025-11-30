@@ -14,7 +14,8 @@ import { EventoService } from "src/features/evento.service";
 import { isNumber } from "class-validator";
 import { EventoDTO } from "./dto/evento.dto";
 import { HistoricoService } from "src/features/historico.service";
-import { Evento, Historico } from "@prisma/client";
+import { HistoricoModel } from "generated/prisma/models";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 @Injectable()
 export class GerenteService {
@@ -25,7 +26,8 @@ export class GerenteService {
                 private readonly galeriaService: GaleriaService,
                 private readonly contatoService: ContatoService,
                 private readonly eventoService: EventoService,
-                private readonly historicoService: HistoricoService) {}
+                private readonly historicoService: HistoricoService,
+                private readonly eventEmitter: EventEmitter2) {}
 
     // Rota para criar estabelecimento
     async criarEstabelecimento(data: CriarEstabelecimentoDTO, id: number, userType: string): Promise<{ id_estabelecimento: number }> {
@@ -57,7 +59,7 @@ export class GerenteService {
       const establishment = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento)
 
       if (establishment) {
-          establishment.imagem = `http://localhost:3000/establishment/image/${establishment.imagem}`;
+          establishment.imagem = `${process.env.BACKEND_URL}/establishment/image/${establishment.imagem}`;
       }
 
       return establishment;
@@ -180,7 +182,7 @@ export class GerenteService {
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui Estbalecimento vinculado a ele', 404)
 
       const imagens = await this.galeriaService.encontraFotoPorEstabelecimento(user.id_estabelecimento)
-      const urls = imagens.map(image => `http://localhost:3000/gallery/${image.foto}`);
+      const urls = imagens.map(image => `${process.env.BACKEND_URL}/gallery/${image.foto}`);
 
       return urls
     }
@@ -271,7 +273,22 @@ export class GerenteService {
       const estabelecimento = await this.estabelecimentoService.buscaEstabelecimento(user.id_estabelecimento);
 
       if(!estabelecimento || estabelecimento.Usuario[0].id_estabelecimento != user.id_estabelecimento) throw new HttpException({status: 404, error: 'Estabelecimento não encontrado'}, 404)
-      return await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, Number(process.env.EVENT_STATUS_CRIADO), file)
+        
+      const response = await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, Number(process.env.EVENT_STATUS_CRIADO), file)
+      const employees = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento);
+
+      if(employees.length > 0){
+        this.eventEmitter.emit('evento.criado', {
+          id_usuario: employees.map(emp => emp.id_usuario),
+          id_evento: response.id_evento,
+          titulo: 'Novo evento cadastrado',
+          mensagem: `O evento ${data.nome_evento} foi cadastrado, veja mais informações.`,
+          data_envio: new Date(),
+          lida: false,
+        })
+      }
+
+      return response
      
     }
 
@@ -285,7 +302,7 @@ export class GerenteService {
 
       return event.map(evento => ({
         ...evento,
-        foto: `http://localhost:3000/event/image/${evento.foto}`
+        foto: `${process.env.BACKEND_URL}/event/image/${evento.foto}`
       }));
 
       
@@ -303,12 +320,12 @@ export class GerenteService {
 
       return event.map(evento => ({
         ...evento,
-        foto: `http://localhost:3000/event/image/${evento.foto}`
+        foto: `${process.env.BACKEND_URL}/event/image/${evento.foto}`
       }))
     }
 
     //rota para buscar evento com dados do historico
-    async buscaEventoComHistorico(userId: number, eventId: number): Promise<Historico[]> {
+    async buscaEventoComHistorico(userId: number, eventId: number): Promise<HistoricoModel[]> {
       const user = await this.userService.getUserById(userId)
       const event = await this.eventoService.buscaEventoPorId(eventId, true)
       const historico = await this.eventoService.buscaTodosOsHistoricosDoEvento(eventId)
@@ -319,8 +336,8 @@ export class GerenteService {
       
       historico.forEach(history => {
         if(history.campo === 'foto') {
-          history.valor_novo = `http://localhost:3000/event/image/${history.valor_novo}`
-          history.valor_antigo = `http://localhost:3000/event/image/${history.valor_antigo}`
+          history.valor_novo = `${process.env.BACKEND_URL}/event/image/${history.valor_novo}`
+          history.valor_antigo = `${process.env.BACKEND_URL}/event/image/${history.valor_antigo}`
         }
       })
       
@@ -381,7 +398,7 @@ export class GerenteService {
       return funcionarios.map(funcionario => ({
           ...funcionario,
           senha: undefined,
-          foto: `http://localhost:3000/user/image/${funcionario.foto}`
+          foto: `${process.env.BACKEND_URL}/user/image/${funcionario.foto}`
       }))
     }
 

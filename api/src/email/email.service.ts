@@ -23,18 +23,18 @@ export class EmailService {
         try {
 
             let path = join(__dirname, "templates", "verification.ejs");
-            const templatePath = path.replace("dist", "src");
+            const templatePath = path.replace("/dist", "");
             const html = await ejs.renderFile(templatePath, { token, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("dist", "src");
+            const logoPath = path.replace("/dist", "");
 
 
             const info = await this.transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: "Verificação de Email",
-                text: `Clique no link para verificar seu email: http://localhost:3000/email/verify?token=${token}`,
+                text: `Clique no link para verificar seu email: ${process.env.BACKEND_URL}/verify?token=${token}`,
                 html,
                 attachments: [
                     {
@@ -56,17 +56,17 @@ export class EmailService {
 
 
             let path = join(__dirname, "templates", "recovery-password.ejs");
-            const templatePath = path.replace("dist", "src");
+            const templatePath = path.replace("/dist", "");
             const html = await ejs.renderFile(templatePath, { token, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("dist", "src");
+            const logoPath = path.replace("/dist", "");
 
             const info = await this.transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: "Recuperação de Senha",
-                text: `Clique no link para recuperar sua senha: http://localhost:3000/auth/recovery-password?token=${token}`,
+                text: `Clique no link para recuperar sua senha: ${process.env.BACKEND_URL}/auth/recovery-password?token=${token}`,
                 html,
                 attachments: [{
                         filename: 'logo.png',
@@ -84,11 +84,11 @@ export class EmailService {
     async sendNewEmployeeEmail(email: string, password: string, nome: string) {
         try {
             let path = join(__dirname, "templates", "new-employee.ejs");
-            const templatePath = path.replace("dist", "src");
+            const templatePath = path.replace("/dist", "");
             const html = await ejs.renderFile(templatePath, { password, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("dist", "src");
+            const logoPath = path.replace("/dist", "");
 
             await this.transporter.sendMail({
                 from: process.env.EMAIL_USER,
