@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GerenteModule } from './users/gerente/gerente.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -8,7 +9,7 @@ import { FeatureModule } from './features/features.module';
 import { FuncionarioModule } from './users/funcionario/funcionario.module';
 
 @Module({
-  imports: [SecurityJwtModule, GerenteModule, AuthModule, FeatureModule, FuncionarioModule],
+  imports: [  EventEmitterModule.forRoot() ,SecurityJwtModule, GerenteModule, AuthModule, FeatureModule, FuncionarioModule],
   controllers: [AppController],
   providers: [AppService],
 })
