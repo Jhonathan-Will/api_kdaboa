@@ -7,9 +7,10 @@ import { SecurityJwtModule } from './security/jwt/jwt.module';
 import { AppService } from './app.service';
 import { FeatureModule } from './features/features.module';
 import { FuncionarioModule } from './users/funcionario/funcionario.module';
+import { NotificacaoModule } from './notification/notificacao.module';
 
 @Module({
-  imports: [  EventEmitterModule.forRoot() ,SecurityJwtModule, GerenteModule, AuthModule, FeatureModule, FuncionarioModule],
+  imports: [  EventEmitterModule.forRoot() ,SecurityJwtModule, GerenteModule, AuthModule, FeatureModule, FuncionarioModule, NotificacaoModule],
   controllers: [AppController],
   providers: [AppService],
 })
