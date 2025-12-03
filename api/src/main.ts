@@ -26,7 +26,10 @@ async function bootstrap() {
   const allowedHeaders = process.env.CORS_ALLOWED_HEADERS?.split(',') || [];
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN,
+    origin: [
+      'https://kdaboa.vercel.app',  // <--- Adicione ESSA linha (sem a barra no final)
+      'http://localhost:5173',      // Mantém o local para quando você testar no seu PC
+    ],
     methods: process.env.CORS_METHODS,
     credentials: true,
     preflightContinue: false,
