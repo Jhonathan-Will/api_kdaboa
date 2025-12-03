@@ -203,7 +203,7 @@ export class GerenteService {
           throw new HttpException('Imagem não encontrada para este estabelecimento', 404);
       }
   
-      const path = join(__dirname, "..", "..", "images", "gallery", imagem.foto).replace("dist", "src");
+      const path = join(__dirname, "..", "..", "images", "gallery", imagem.foto).replace(/dist[\/\\]?/, "");
   
       try {
           await fs.promises.unlink(path); // <- faltava o await
@@ -277,15 +277,19 @@ export class GerenteService {
       const response = await this.eventoService.cadastraEvento(data, estabelecimento.id_estabelecimento, Number(process.env.EVENT_STATUS_CRIADO), file)
       const employees = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento);
 
-      if(employees.length > 0){
-        this.eventEmitter.emit('evento.criado', {
-          id_usuario: employees.map(emp => emp.id_usuario),
-          id_evento: response.id_evento,
-          titulo: 'Novo evento cadastrado',
-          mensagem: `O evento ${data.nome_evento} foi cadastrado, veja mais informações.`,
-          data_envio: new Date(),
-          lida: false,
-        })
+      if (employees.length > 0) {
+        for (const emp of employees) {
+          const payload = {
+            id_usuario: emp.id_usuario,
+            id_evento: response.id_evento,
+            titulo: 'Novo evento cadastrado',
+            mensagem: `O evento ${data.nome_evento} foi cadastrado, veja mais informações.`,
+            data_envio: new Date(),
+            lida: false,
+          }; // matches the notification shape; no `new` here
+
+          this.eventEmitter.emit('evento.criado', payload);
+        }
       }
 
       return response
@@ -354,7 +358,7 @@ export class GerenteService {
 
       if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
       
-      const path = join(__dirname,"..","..","images","events", event.foto).replace("dist", "src");
+      const path = join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "");
               
       try {
         await fs.promises.unlink(path)
@@ -443,7 +447,7 @@ export class GerenteService {
             case true:
                 return await this.eventoService.alteraEstatus(eventId, Number(process.env.EVENT_STATUS_CRIADO) )
             case false:
-              fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).then(() => {
+              fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "")).then(() => {
                   return this.eventoService.deletaEvento(eventId)
               }).catch((error) => {
                   throw new HttpException('Erro ao deletar evento', 500);
@@ -474,7 +478,7 @@ export class GerenteService {
             case true:
                 await this.historicoService.deletaHistorico(historyId).then( () => {
                   if(history.campo === 'foto') {
-                    fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace("dist", "src")).catch((error) => {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "")).catch((error) => {
                       console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
                     })
                   }
@@ -493,7 +497,7 @@ export class GerenteService {
             case false: 
                 await this.historicoService.deletaHistorico(historyId).then(() => {
                   if(history.campo === 'foto' && history.valor_novo) {
-                    fs.promises.unlink(join(__dirname,"..","..","images","events", history.valor_novo).replace("dist", "src")).catch((error) => {
+                    fs.promises.unlink(join(__dirname,"..","..","images","events", history.valor_novo).replace(/dist[\/\\]?/, "")).catch((error) => {
                       console.log('Error ao deletar imagem rejeitada do evento após negar alteração', error)
                     })
                   }

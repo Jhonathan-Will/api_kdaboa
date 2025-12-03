@@ -90,7 +90,14 @@ export class GerenteController {
                 error: 'Token CSRF inválido'
             }, 405);
         }
-        res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, file.filename, req.user.sub));
+
+        try {
+            res.status(HttpStatus.OK).json(this.gerenteService.alteraEstabelecimento(estabelecimento, file.filename, req.user.sub));
+        } catch (error) {
+            console.log(error)
+
+        }
+
     }
 
     //rota para cadastrar endereço
@@ -100,7 +107,6 @@ export class GerenteController {
     async CadastrarEndreco(@Body() endereco: CriarEnderecoDTO, @Req() req: any, @Res() res: Response) {
         if (this.csrf.validateToken(req.cookies['x-csrf-token'] || req.headers['x-csrf-token'])) {
             await this.gerenteService.cadastrarEndereco(endereco, req.user).then(response => {
-                console.log(response)
                 res.status(HttpStatus.CREATED).json(response)
             });
         }
