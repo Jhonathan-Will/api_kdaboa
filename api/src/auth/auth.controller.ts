@@ -45,19 +45,19 @@ export class AuthController {
     @Post("login")
     async login(@Body() user: LoginDTO, @Res() res: any) {
         return await this.authService.login(user).then((response) => {
-            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: false,
+            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: true,
                                                   secure: true,       
-                                                  sameSite: 'lax',
+                                                  sameSite: 'none',
                                                   path:"/"})
 
             res.cookie('token', response.access_token,{httpOnly: true,
                                                 secure:  true,
-                                                sameSite: 'lax',
+                                                sameSite: 'none',
                                                 path:`/`})
 
             res.cookie('refresh_token', response.refresh_token, {httpOnly: true,
                                                                 secure: true,
-                                                                sameSite: 'lax',
+                                                                sameSite: 'none',
                                                                 path:'/'})
 
             if(!response.isManager && response.type === Number(process.env.STATUS_CRIADO)) {
@@ -106,9 +106,9 @@ export class AuthController {
     @Get("recovery-password")
     async verificaEmailTrocaSenha(@Query('token') token: string, @Res() res: any, @Req() req: any) {
         await this.authService.verifyChangePasswordEmail(token).then((response) => {
-            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: false,
-                                                  secure: false,       
-                                                  sameSite: 'lax',
+            res.cookie('x-csrf-token', response.csrfToken,{httpOnly: true,
+                                                  secure: true,       
+                                                  sameSite: 'none',
                                                   path:"/"})
 
             res.cookie('token', response.token,{httpOnly: true,

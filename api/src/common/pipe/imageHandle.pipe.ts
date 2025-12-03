@@ -15,7 +15,7 @@ export class ImageHandlePipe implements PipeTransform {
             throw new Error('File size exceeds the maximum limit of 5MB.');
         }
         
-        const place = join(__dirname, "..", "..", "images", this.path).replace("dist", "src");
+        const place = join(__dirname, "..", "..", "images", this.path).replace(/dist[\/\\]?/, "");
         const hash = createHash('sha256').update(file.buffer).digest('hex');
         const extension = extname(file.originalname);
 
