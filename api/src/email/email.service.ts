@@ -21,13 +21,13 @@ export class EmailService {
 
     async sendVerificationEmail(email: string, token: string, nome: string) {
         try {
-
+            const urlAPI = process.env.BACKEND_URL
             let path = join(__dirname, "templates", "verification.ejs");
-            const templatePath = path.replace("/dist", "");
-            const html = await ejs.renderFile(templatePath, { token, nome });
+            const templatePath = path.replace("\dist", "");
+            const html = await ejs.renderFile(templatePath, { token, nome, urlAPI });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("/dist", "");
+            const logoPath = path.replace("\dist", "");
 
 
             const info = await this.transporter.sendMail({
@@ -56,11 +56,11 @@ export class EmailService {
 
 
             let path = join(__dirname, "templates", "recovery-password.ejs");
-            const templatePath = path.replace("/dist", "");
+            const templatePath = path.replace("\dist", "");
             const html = await ejs.renderFile(templatePath, { token, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("/dist", "");
+            const logoPath = path.replace("\dist", "");
 
             const info = await this.transporter.sendMail({
                 from: process.env.EMAIL_USER,
@@ -84,11 +84,11 @@ export class EmailService {
     async sendNewEmployeeEmail(email: string, password: string, nome: string) {
         try {
             let path = join(__dirname, "templates", "new-employee.ejs");
-            const templatePath = path.replace("/dist", "");
+            const templatePath = path.replace("\dist", "");
             const html = await ejs.renderFile(templatePath, { password, nome });
 
             path = join(__dirname, "templates", 'assets', 'download.webp');
-            const logoPath = path.replace("/dist", "");
+            const logoPath = path.replace("\dist", "");
 
             await this.transporter.sendMail({
                 from: process.env.EMAIL_USER,
