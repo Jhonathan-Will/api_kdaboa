@@ -126,6 +126,7 @@ model Notificacao {
   titulo      String   @db.VarChar(200)
   mensagem    String   @db.VarChar(1000)
   data_envio  DateTime @db.DateTime()
+  tipo        Notificacao_tipo
   lida        Boolean  @db.TinyInt
 }
 
@@ -168,4 +169,13 @@ model Usuario {
 enum Usuario_tipo {
   Gerente
   Funcionario 
+}
+
+enum Notificacao_tipo {
+  Criado
+  Alterado
+  Aprovado
+  Rejeitado
+  Deletado
+  Analise
 }
