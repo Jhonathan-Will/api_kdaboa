@@ -6,12 +6,12 @@ import { GaleriaService } from "./galeria.service";
 import { ContatoService } from "./contato.service";
 import { EventoService } from "./evento.service";
 import { HistoricoService } from "./historico.service";
-import { NotificacaoService } from "./notificacao.service";
+import { NotificacaoFeature } from "./notificacao.feature";
 
 
 @Module({
     imports: [],
-    providers: [PrismaService, EnderecoService, EstabelecimentoService, GaleriaService, ContatoService, EventoService, HistoricoService, NotificacaoService],
-    exports: [EnderecoService, EstabelecimentoService, GaleriaService, ContatoService, EventoService, HistoricoService, NotificacaoService],
+    providers: [PrismaService, EnderecoService, EstabelecimentoService, GaleriaService, ContatoService, EventoService, HistoricoService, NotificacaoFeature],
+    exports: [EnderecoService, EstabelecimentoService, GaleriaService, ContatoService, EventoService, HistoricoService, NotificacaoFeature],
 })
 export class FeatureModule {}
