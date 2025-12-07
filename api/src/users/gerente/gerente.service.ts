@@ -282,11 +282,8 @@ export class GerenteService {
           const payload = {
             id_usuario: emp.id_usuario,
             id_evento: response.id_evento,
-            titulo: 'Novo evento cadastrado',
             mensagem: `O evento ${data.nome_evento} foi cadastrado, veja mais informações.`,
-            data_envio: new Date(),
-            lida: false,
-          }; // matches the notification shape; no `new` here
+          };
 
           this.eventEmitter.emit('evento.criado', payload);
         }
@@ -351,15 +348,13 @@ export class GerenteService {
     //rota para alterar evento
     async alteraEvento(userId: number, eventId: number, file: string, data: CriarEventoDTO) {
       const user = await this.userService.getUserById(userId)
-
       if(!user || !user.id_estabelecimento) throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
 
       const event = await this.eventoService.buscaEventoPorId(eventId, true)
-
       if(!event || event.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Evento não encontrado', 404)
       
       const path = join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "");
-              
+
       try {
         await fs.promises.unlink(path)
 
@@ -369,7 +364,21 @@ export class GerenteService {
         throw new HttpException('Erro ao alterar evento', 500);
       }
 
+      const employees = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento);
       await this.eventoService.alteraEvento(data, file, eventId).then(response => {
+
+        if (employees.length > 0) {
+          for (const emp of employees) {
+            const payload = {
+              id_usuario: emp.id_usuario,
+              id_evento: eventId,
+              mensagem: `O evento ${event.nome_evento} foi alterado, veja as mudanças.`,
+            };
+
+            this.eventEmitter.emit('evento.alterado', payload);
+          }
+        }
+
         return response
       }).catch(error => {
         console.log(error)
@@ -386,7 +395,11 @@ export class GerenteService {
 
       if(event?.id_estabelecimento != user.id_estabelecimento) throw new HttpException('Não foi possivel encontrar o evento', 404)
 
-      return await this.eventoService.deletaEvento(eventId)
+      const response = await this.eventoService.deletaEvento(eventId)
+      
+      fs.unlinkSync(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, ""));
+
+      return response
     }
 
     //rota para buscar funcionario
@@ -442,10 +455,24 @@ export class GerenteService {
         if(!event || event.id_estabelecimento != user.id_estabelecimento){
           throw new HttpException('Evento não encontrado', 404)
         } 
+        const employees = await this.userService.getEmployeesByEstablishment(user.id_estabelecimento);
 
         switch(aceita) {
             case true:
-                return await this.eventoService.alteraEstatus(eventId, Number(process.env.EVENT_STATUS_CRIADO) )
+                const response = await this.eventoService.alteraEstatus(eventId, Number(process.env.EVENT_STATUS_CRIADO) )
+                if (employees.length > 0) {
+                  for (const emp of employees) {
+                    const payload = {
+                      id_usuario: emp.id_usuario,
+                      id_evento: eventId,
+                      titulo:  'Evento aprovado',
+                      mensagem: `O evento ${event.nome_evento} foi aprovado e está disponível.`,
+                    };
+
+                    this.eventEmitter.emit('evento.aprovado', payload);
+                  }
+                }
+                return response
             case false:
               fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "")).then(() => {
                   return this.eventoService.deletaEvento(eventId)
@@ -461,10 +488,12 @@ export class GerenteService {
         const user = await this.userService.getUserById(userID)
         const event = await this.eventoService.buscaEventoPorId(eventId, true)
         const history = await this.eventoService.buscaHistoricoPorEvento(eventId, historyId)
-
+        
         if(!user || !user.id_estabelecimento){ 
           throw new HttpException('Usuário não possui estabelecimento vinculado', 404)
         }
+
+        const employees = await this.userService.getEmployeesByEstablishment(user?.id_estabelecimento);
 
         if(!event || event.id_estabelecimento != user.id_estabelecimento){
           throw new HttpException('Evento não encontrado', 404)
@@ -476,25 +505,52 @@ export class GerenteService {
         
         switch(aceita) {
             case true:
-                await this.historicoService.deletaHistorico(historyId).then( () => {
-                  if(history.campo === 'foto') {
-                    fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "")).catch((error) => {
-                      console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
-                    })
+                await this.historicoService.deletaHistorico(historyId);
+                
+                if(history.campo === 'foto') {
+                  await fs.promises.unlink(join(__dirname,"..","..","images","events", event.foto).replace(/dist[\/\\]?/, "")).catch((error) => {
+                    console.log('Error ao deletar imagem antiga do evento após aceitar alteração', error)
+                  })
+                }
+
+                if(history.campo !== 'categoria') {
+                  const response = await this.eventoService.alteracaoDoHistorico(eventId, history)
+
+                  if (employees.length > 0) {
+                    for (const emp of employees) {
+                      const payload = {
+                        id_usuario: emp.id_usuario,
+                        id_evento: eventId,
+                        titulo:  'Alteração de evento aprovada',
+                        mensagem: `O evento ${event.nome_evento} teve a alteração no campo ${history.campo}.`,
+                      };
+
+                      this.eventEmitter.emit('evento.aprovado', payload);
+                    }
                   }
 
-                  if(history.campo !== 'categoria') {
-                    return this.eventoService.alteracaoDoHistorico(eventId, history)
-                  }
-                  
-                  this.eventoService.alteraCategoria(eventId, (history.valor_novo!.split(',').map(id => parseInt(id))))
-                }).catch((error) => {
-                  console.log('Error ao alterar evento com dados da quarentena', error)
-                  throw new HttpException('Erro ao aceitar alteração do evento', 500);
-                })
+                  return response
+                }
+                
+                const response = await this.eventoService.alteraCategoria(eventId, (history.valor_novo!.split(',').map(id => parseInt(id))))
 
-                break;
-            case false: 
+                if (employees.length > 0) {
+                  for (const emp of employees) {
+                    const payload = {
+                      id_usuario: emp.id_usuario,
+                      id_evento: eventId,
+                      titulo:  'Alteração de evento aprovada',
+                      mensagem: `O evento ${event.nome_evento} teve a alteração no campo ${history.campo}.`,
+                    };
+
+                    this.eventEmitter.emit('evento.aprovado', payload);
+                  }
+                }
+
+                return response
+
+              break;
+             case false: 
                 await this.historicoService.deletaHistorico(historyId).then(() => {
                   if(history.campo === 'foto' && history.valor_novo) {
                     fs.promises.unlink(join(__dirname,"..","..","images","events", history.valor_novo).replace(/dist[\/\\]?/, "")).catch((error) => {

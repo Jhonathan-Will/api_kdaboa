@@ -5,8 +5,6 @@ import { RefreshGuard } from 'src/security/jwt/guard/refresh.guard';
 import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { CriarEnderecoDTO } from './dto/criarEndreço.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { AlteraEstabelecimentoDTO } from './dto/alteraEstabelecimento.dto';
 import { CsrfService } from 'src/security/csrf/csrf.service';
 import { AlteraEnderecoDTO } from './dto/alteraEndereco.dto';
@@ -15,7 +13,6 @@ import { CriarEventoDTO } from './dto/criarEvento.dto';
 import { Response } from 'express';
 import { DeletaGaleriaDTO } from './dto/deletaGaleria.dto';
 import { ImageHandlePipe } from 'src/common/pipe/imageHandle.pipe';
-import { ref } from 'process';
 
 @Controller("gerente")
 export class GerenteController {
